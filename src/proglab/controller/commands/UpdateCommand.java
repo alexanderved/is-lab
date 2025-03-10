@@ -2,6 +2,8 @@ package proglab.controller.commands;
 
 import proglab.controller.Runner;
 import proglab.domain.OrganizationTemplate;
+import proglab.exceptions.InputDeniedException;
+import proglab.exceptions.InputFailedException;
 import proglab.exceptions.InvalidArgumentFormatException;
 import proglab.exceptions.UnexpectedEODException;
 import proglab.exceptions.UnsupportedCommandException;
@@ -59,6 +61,8 @@ public class UpdateCommand extends Command {
             WrongNumberOfArgumentsException,
             InvalidArgumentFormatException,
             UnsupportedCommandException,
+            InputDeniedException,
+            InputFailedException,
             UnexpectedEODException
         {
             String[] args = cmd.split(" ");
@@ -78,11 +82,7 @@ public class UpdateCommand extends Command {
                 throw new InvalidArgumentFormatException(CMD_NAME, "id", "Целое число");
             }
 
-            OrganizationTemplate template =
-                OrganizationTemplateCollector.collect(runner.getView());
-            if (template == null) { 
-                return null;
-            }
+            OrganizationTemplate template = OrganizationTemplateCollector.collect(runner.getView());
 
             return new UpdateCommand(id, template, runner);
         }

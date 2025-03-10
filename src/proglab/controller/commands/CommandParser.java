@@ -1,6 +1,8 @@
 package proglab.controller.commands;
 
 import proglab.controller.Runner;
+import proglab.exceptions.InputDeniedException;
+import proglab.exceptions.InputFailedException;
 import proglab.exceptions.InvalidArgumentFormatException;
 import proglab.exceptions.UnexpectedEODException;
 import proglab.exceptions.UnsupportedCommandException;
@@ -20,6 +22,8 @@ public abstract class CommandParser implements CommandsInfoSource {
      * @throws InvalidArgumentFormatException если формат аргументов команд неверен
      * @throws UnsupportedCommandException если парсер не может создать команду,
      *                                     соответствующую переданной строке
+     * @throws InputDeniedException если парсер не может запросить данные
+     * @throws InputFailedException если в процессе ввода данных возникла ошибка
      * @throws UnexpectedEODException если парсер не может получить все необходимые
      *                                данные для создания команды
      * @throws IllegalArgumentException если исполнитель команды null
@@ -29,5 +33,7 @@ public abstract class CommandParser implements CommandsInfoSource {
         WrongNumberOfArgumentsException,
         InvalidArgumentFormatException,
         UnsupportedCommandException,
+        InputDeniedException,
+        InputFailedException,
         UnexpectedEODException;
 }

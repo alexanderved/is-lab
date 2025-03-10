@@ -17,7 +17,7 @@ import proglab.view.inputrequests.InputRequestFactory;
 
 public class OrganizationTemplateCollector {
     public static OrganizationTemplate collect(View view)
-            throws UnexpectedEODException {
+            throws InputDeniedException, InputFailedException, UnexpectedEODException {
         InputRequestFactory inReqFactory = view.getInputRequestFactory();
 
         var coordinatesReq = inReqFactory
@@ -72,12 +72,6 @@ public class OrganizationTemplateCollector {
                 .addFieldRequest(OrganizationFields.OFFICIAL_ADDRESS,
                         inReqFactory.createOptionalInputRequest(officialAddressReq));
 
-        try {
-            return view.input(templateReq);
-        } catch (InputDeniedException | InputFailedException e) {
-            view.error("Не удается считать данные организации: " + e.getMessage());
-
-            return null;
-        }
+        return view.input(templateReq);
     }
 }

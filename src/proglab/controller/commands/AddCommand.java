@@ -2,6 +2,8 @@ package proglab.controller.commands;
 
 import proglab.controller.Runner;
 import proglab.domain.OrganizationTemplate;
+import proglab.exceptions.InputDeniedException;
+import proglab.exceptions.InputFailedException;
 import proglab.exceptions.UnexpectedEODException;
 import proglab.exceptions.UnsupportedCommandException;
 import proglab.exceptions.WrongNumberOfArgumentsException;
@@ -34,7 +36,7 @@ public class AddCommand extends Command {
 
         runner.getView().output("Новая организация добавлена в коллекцию");
     }
-    
+
     /**
      * Парсер команды 'add'.
      */
@@ -49,11 +51,8 @@ public class AddCommand extends Command {
 
         @Override
         public Command parse(String cmd, Runner runner)
-        throws
-            WrongNumberOfArgumentsException,
-            UnsupportedCommandException,
-            UnexpectedEODException
-        {
+                throws WrongNumberOfArgumentsException, UnsupportedCommandException, InputDeniedException,
+                InputFailedException, UnexpectedEODException {
             String[] args = cmd.split(" ");
             if (!args[0].equals(CMD_NAME)) {
                 throw new UnsupportedCommandException(args[0]);
@@ -64,11 +63,7 @@ public class AddCommand extends Command {
                         args.length - 1, NB_ARGUMENTS);
             }
 
-            OrganizationTemplate template =
-                OrganizationTemplateCollector.collect(runner.getView());
-            if (template == null) { 
-                return null;
-            }
+            OrganizationTemplate template = OrganizationTemplateCollector.collect(runner.getView());
 
             return new AddCommand(template, runner);
         }

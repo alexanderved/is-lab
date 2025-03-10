@@ -120,11 +120,7 @@ public class Runner {
             try {
                 CommandInputRequest cmdInReq = inReqFactory.createCommandInputRequest(this, cmdParser);
                 Command cmd = view.input(cmdInReq);
-
-                if (cmd == null) {
-                    continue;
-                }
-
+                
                 cmd.execute();
             } catch (InputFailedException e) {
                 view.error(e.getMessage());

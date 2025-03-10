@@ -5,6 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import proglab.controller.Runner;
+import proglab.exceptions.InputDeniedException;
+import proglab.exceptions.InputFailedException;
 import proglab.exceptions.InvalidArgumentFormatException;
 import proglab.exceptions.UnexpectedEODException;
 import proglab.exceptions.UnsupportedCommandException;
@@ -35,6 +37,8 @@ public class GeneralCommandParser extends CommandParser {
         WrongNumberOfArgumentsException,
         InvalidArgumentFormatException,
         UnsupportedCommandException,
+        InputDeniedException,
+        InputFailedException,
         UnexpectedEODException
     {
         String cmdName = cmd.split(" ")[0];

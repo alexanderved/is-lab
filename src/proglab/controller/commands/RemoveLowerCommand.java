@@ -2,6 +2,8 @@ package proglab.controller.commands;
 
 import proglab.controller.Runner;
 import proglab.domain.OrganizationTemplate;
+import proglab.exceptions.InputDeniedException;
+import proglab.exceptions.InputFailedException;
 import proglab.exceptions.UnexpectedEODException;
 import proglab.exceptions.UnsupportedCommandException;
 import proglab.exceptions.WrongNumberOfArgumentsException;
@@ -53,6 +55,8 @@ public class RemoveLowerCommand extends Command {
         throws
             WrongNumberOfArgumentsException,
             UnsupportedCommandException,
+            InputDeniedException,
+            InputFailedException,
             UnexpectedEODException
         {
             String[] args = cmd.split(" ");
@@ -65,11 +69,7 @@ public class RemoveLowerCommand extends Command {
                         args.length - 1, NB_ARGUMENTS);
             }
 
-            OrganizationTemplate template =
-                OrganizationTemplateCollector.collect(runner.getView());
-            if (template == null) { 
-                return null;
-            }
+            OrganizationTemplate template = OrganizationTemplateCollector.collect(runner.getView());
 
             return new RemoveLowerCommand(template, runner);
         }
