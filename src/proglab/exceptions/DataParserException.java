@@ -10,6 +10,6 @@ public class DataParserException extends Exception {
      *          данные
      */
     public DataParserException(Throwable e) {
-        super(e);
+        super(e.getMessage(), e);
     }
 }

@@ -17,7 +17,7 @@ public class InputDeniedException extends Exception {
      *          данные
      */
     public InputDeniedException(Throwable e) {
-        super(e);
+        super(e.getMessage(), e);
     }
 
     @Override

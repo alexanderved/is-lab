@@ -16,6 +16,6 @@ public class InputFailedException extends Exception {
      * @param e Ошибка или исключение, из-за которого возникла ошибка ввода
      */
     public InputFailedException(Throwable e) {
-        super(e);
+        super(e.getMessage(), e);
     }
 }

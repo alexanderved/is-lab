@@ -16,7 +16,7 @@ public class RepositoryAccessDeniedException extends Exception {
      * @param e Ошибка или исключение, из-за которого не удалось получить доступ к репозиторию
      */
     public RepositoryAccessDeniedException(Throwable e) {
-        super(e);
+        super(e.getMessage(), e);
     }
 
     @Override
