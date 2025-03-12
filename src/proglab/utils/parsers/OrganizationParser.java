@@ -16,7 +16,18 @@ import proglab.utils.fields.CoordinatesField;
 import proglab.utils.fields.OrganizationField;
 import proglab.utils.validators.OrganizationValidator;
 
+/**
+ * Парсер для класса {@link Organization}.
+ */
 public final class OrganizationParser {
+    /**
+     * Возвращает экземпляр класса, получаемый путем парсинга значений полей.
+     * 
+     * @param data Значения полей класса
+     * @return экземпляр класса
+     * @throws DataParserException если в процессе парсинга было выброшено
+     *                             исключение
+     */
     public static Organization parse(Map<OrganizationField, Object> data) throws DataParserException {
         int id = 0;
         ZonedDateTime creationDate = null;
@@ -44,6 +55,14 @@ public final class OrganizationParser {
         }
     }
 
+    /**
+     * Возвращает поле 'id' класса, получаемое путем парсинга строки.
+     * 
+     * @param data строка
+     * @return поле 'id' класса
+     * @throws DataParserException если в процессе парсинга было выброшено
+     *                             исключение
+     */
     public static Integer parseId(String data) throws DataParserException {
         try {
             Integer id = Integer.parseInt(data);
@@ -57,14 +76,38 @@ public final class OrganizationParser {
         }
     }
 
+    /**
+     * Возвращает поле 'name' класса, получаемое путем парсинга строки.
+     * 
+     * @param data строка
+     * @return поле 'name' класса
+     * @throws DataParserException если в процессе парсинга было выброшено
+     *                             исключение
+     */
     public static String parseName(String data) throws DataParserException {
         return OrganizationTemplateParser.parseName(data);
     }
 
+    /**
+     * Возвращает поле 'coordinates' класса, получаемое путем парсинга полей класса {@link Coordinates}.
+     * 
+     * @param data поля класса {@code Coordinates}
+     * @return поле 'coordinates' класса
+     * @throws DataParserException если в процессе парсинга было выброшено
+     *                             исключение
+     */
     public static Coordinates parseCoordinates(Map<CoordinatesField, Object> data) throws DataParserException {
         return OrganizationTemplateParser.parseCoordinates(data);
     }
 
+    /**
+     * Возвращает поле 'creationDate' класса, получаемое путем парсинга строки.
+     * 
+     * @param data строка
+     * @return поле 'creationDate' класса
+     * @throws DataParserException если в процессе парсинга было выброшено
+     *                             исключение
+     */
     public static ZonedDateTime parseCreationDate(String data) throws DataParserException {
         try {
             ZonedDateTime creationDate = ZonedDateTime.parse(data);
@@ -78,22 +121,62 @@ public final class OrganizationParser {
         }
     }
 
+    /**
+     * Возвращает поле 'annualTurnover' класса, получаемое путем парсинга строки.
+     * 
+     * @param data строка
+     * @return поле 'annualTurnover' класса
+     * @throws DataParserException если в процессе парсинга было выброшено
+     *                             исключение
+     */
     public static Float parseAnnualTurnover(String data) throws DataParserException {
         return OrganizationTemplateParser.parseAnnualTurnover(data);
     }
 
+    /**
+     * Возвращает поле 'fullName' класса, получаемое путем парсинга строки.
+     * 
+     * @param data строка
+     * @return поле 'fullName' класса
+     * @throws DataParserException если в процессе парсинга было выброшено
+     *                             исключение
+     */
     public static String parseFullName(String data) throws DataParserException {
         return OrganizationTemplateParser.parseFullName(data);
     }
 
+    /**
+     * Возвращает поле 'employeesCount' класса, получаемое путем парсинга строки.
+     * 
+     * @param data строка
+     * @return поле 'employeesCount' класса
+     * @throws DataParserException если в процессе парсинга было выброшено
+     *                             исключение
+     */
     public static Integer parseEmployeesCount(String data) throws DataParserException {
         return OrganizationTemplateParser.parseEmployeesCount(data);
     }
 
+    /**
+     * Возвращает поле 'type' класса, получаемое путем парсинга строки.
+     * 
+     * @param data строка
+     * @return поле 'type' класса
+     * @throws DataParserException если в процессе парсинга было выброшено
+     *                             исключение
+     */
     public static OrganizationType parseType(String data) throws DataParserException {
         return OrganizationTemplateParser.parseType(data);
     }
 
+    /**
+     * Возвращает поле 'officialAddress' класса, получаемое путем парсинга полей класса {@link Address}.
+     * 
+     * @param data поля класса {@code Address}
+     * @return поле 'officialAddress' класса
+     * @throws DataParserException если в процессе парсинга было выброшено
+     *                             исключение
+     */
     public static Address parseOfficialAddress(Map<AddressField, Object> data) throws DataParserException {
         return OrganizationTemplateParser.parseOfficialAddress(data);
     }

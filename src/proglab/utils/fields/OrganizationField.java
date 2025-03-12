@@ -5,6 +5,9 @@ import java.util.stream.Stream;
 
 import proglab.domain.OrganizationType;
 
+/**
+ * Перечисление полей класса {@link Organization}.
+ */
 public enum OrganizationField implements Field {
     ID("id", "ID"),
     NAME("name", "название"),
@@ -30,6 +33,13 @@ public enum OrganizationField implements Field {
         this.extra = extra;
     }
 
+    /**
+     * Возвращает поле класса, соответствующее данному имени.
+     * 
+     * @param name Имя поля
+     * @return поле класса, соответствующее данному имени.
+     * @throws IllegalArgumentException если отсутствует поле с данным именем
+     */
     public static OrganizationField fromName(String name) {
         for (OrganizationField orgFields : OrganizationField.values()) {
             if (orgFields.getName().equals(name)) {

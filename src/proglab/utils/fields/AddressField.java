@@ -1,5 +1,8 @@
 package proglab.utils.fields;
 
+/**
+ * Перечисление полей класса {@link Address}.
+ */
 public enum AddressField implements Field {
     STREET("street", "улица"),
     TOWN("town", "координаты города");
@@ -18,6 +21,13 @@ public enum AddressField implements Field {
         this.extra = extra;
     }
 
+    /**
+     * Возвращает поле класса, соответствующее данному имени.
+     * 
+     * @param name Имя поля
+     * @return поле класса, соответствующее данному имени.
+     * @throws IllegalArgumentException если отсутствует поле с данным именем
+     */
     public static AddressField fromName(String name) {
         for (AddressField addrFields : AddressField.values()) {
             if (addrFields.getName().equals(name)) {

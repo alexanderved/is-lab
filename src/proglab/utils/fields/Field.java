@@ -1,7 +1,7 @@
 package proglab.utils.fields;
 
 /**
- * Интерфейс полей класса.
+ * Интерфейс поля класса.
  */
 public interface Field {
     /**

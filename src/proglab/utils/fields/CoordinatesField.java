@@ -1,5 +1,8 @@
 package proglab.utils.fields;
 
+/**
+ * Перечисление полей класса {@link Coordinates}.
+ */
 public enum CoordinatesField implements Field {
     X("x", "X"),
     Y("y", "Y");
@@ -18,6 +21,13 @@ public enum CoordinatesField implements Field {
         this.extra = extra;
     }
 
+    /**
+     * Возвращает поле класса, соответствующее данному имени.
+     * 
+     * @param name Имя поля
+     * @return поле класса, соответствующее данному имени.
+     * @throws IllegalArgumentException если отсутствует поле с данным именем
+     */
     public static CoordinatesField fromName(String name) {
         for (CoordinatesField coordsFields : CoordinatesField.values()) {
             if (coordsFields.getName().equals(name)) {
