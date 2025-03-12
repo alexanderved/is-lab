@@ -1,7 +1,6 @@
 package proglab.view.inputrequests;
 
 import proglab.controller.Runner;
-import proglab.controller.commands.CommandParser;
 import proglab.view.inputrequests.CompositeDataInputRequest.CompositeDataParser;
 import proglab.view.inputrequests.PrimitiveDataInputRequest.PrimitiveDataParser;
 
@@ -49,11 +48,9 @@ public abstract class InputRequestFactory {
      * Создает запрос на ввод команды.
      * 
      * @param runner Исполнитель команд
-     * @param parser Парсер команд
      * @return запрос на ввод команды
      */
-    public abstract CommandInputRequest createCommandInputRequest(
-            Runner runner, CommandParser parser);
+    public abstract CommandInputRequest createCommandInputRequest(Runner runner);
 
     /**
      * Создает запрос на ввод примитивного типа данных без дополнительной информации.

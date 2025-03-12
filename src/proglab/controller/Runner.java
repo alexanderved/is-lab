@@ -118,7 +118,7 @@ public class Runner {
         InputRequestFactory inReqFactory = view.getInputRequestFactory();
         while (getState() == State.RUNNING) {
             try {
-                CommandInputRequest cmdInReq = inReqFactory.createCommandInputRequest(this, cmdParser);
+                CommandInputRequest cmdInReq = inReqFactory.createCommandInputRequest(this);
                 Command cmd = view.input(cmdInReq);
                 
                 cmd.execute();

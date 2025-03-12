@@ -1,7 +1,6 @@
 package proglab.view.cli;
 
 import proglab.controller.Runner;
-import proglab.controller.commands.CommandParser;
 import proglab.view.inputrequests.CompositeDataInputRequest;
 import proglab.view.inputrequests.DataInputRequest;
 import proglab.view.inputrequests.PrimitiveDataInputRequest;
@@ -32,8 +31,7 @@ class InputRequestFactory extends proglab.view.inputrequests.InputRequestFactory
     }
 
     @Override
-    public CommandInputRequest createCommandInputRequest(
-            Runner runner, CommandParser parser) {
-        return new proglab.view.cli.CommandInputRequest(cli, runner, parser);
+    public CommandInputRequest createCommandInputRequest(Runner runner) {
+        return new proglab.view.cli.CommandInputRequest(cli, runner);
     }
 }
