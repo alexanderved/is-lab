@@ -26,8 +26,8 @@ public class OrganizationTemplateCollector {
      * @return Шаблон организации
      * @throws InputDeniedException   если сборщик не может запросить данные
      * @throws InputFailedException   если в процессе ввода данных возникла ошибка
-     * @throws UnexpectedEODException если сборщик не может получить все необходимые
-     *                                данные для создания шаблона организации
+     * @throws UnexpectedEODException если данные перестали поступать до окончания
+     *                                сбора
      */
     public static OrganizationTemplate collect(View view)
             throws InputDeniedException, InputFailedException, UnexpectedEODException {

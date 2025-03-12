@@ -14,10 +14,19 @@ import proglab.view.View;
 import proglab.view.inputrequests.InputRequest;
 import proglab.view.inputrequests.InputRequestFactory;
 
+/**
+ * Представление, в котором данные вводятся из файла.
+ */
 public class FileInputView extends View implements Closeable {
-    View view;
-    BufferedReader reader;
+    private final View view;
+    private final BufferedReader reader;
 
+    /**
+     * @param fileName Путь до файла, из которого осуществляется ввод данных
+     * @param view     Пользовательское представление, используемое для вывода
+     * @throws FileNotFoundException если файл, из которого осуществляется ввод
+     *                               данных, не найден
+     */
     public FileInputView(String fileName, View view) throws FileNotFoundException {
         this.view = view;
         reader = new BufferedReader(new FileReader(fileName));
@@ -54,8 +63,7 @@ public class FileInputView extends View implements Closeable {
 
     @Override
     public <T> T input(InputRequest<T> req)
-        throws InputDeniedException, InputFailedException, UnexpectedEODException
-    {
+            throws InputDeniedException, InputFailedException, UnexpectedEODException {
         return req.request();
     }
 

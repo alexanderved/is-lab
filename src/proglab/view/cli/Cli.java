@@ -10,12 +10,11 @@ import proglab.view.View;
 import proglab.view.inputrequests.InputRequest;
 import proglab.view.inputrequests.InputRequestFactory;
 
+/**
+ * Консольное пользовательское представление.
+ */
 public class Cli extends View {
-    private Console console;
-
-    public Cli() {
-        console = System.console();
-    }
+    private final Console console = System.console();
 
     @Override
     public void output(String msg) {
@@ -27,6 +26,7 @@ public class Cli extends View {
         System.err.println(msg);
     }
 
+    @Override
     public String input(String msg) throws InputDeniedException, UnexpectedEODException {
         try {
             console.flush();
@@ -40,10 +40,6 @@ public class Cli extends View {
         } catch (IOError e) {
             throw new InputDeniedException(e.getMessage());
         }
-    }
-
-    public String inputCommand() throws InputDeniedException, UnexpectedEODException {
-        return input("> ");
     }
 
     @Override
