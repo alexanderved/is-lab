@@ -1,6 +1,6 @@
 package proglab.utils.fields;
 
-public enum LocationFields implements Fields {
+public enum LocationField implements Field {
     X("x", "X"),
     Y("y", "Y"),
     Z("z", "Z");
@@ -9,24 +9,24 @@ public enum LocationFields implements Fields {
     private final String displayName;
     private final String extra;
 
-    private LocationFields(String name, String displayName) {
+    private LocationField(String name, String displayName) {
         this(name, displayName, null);
     }
 
-    private LocationFields(String name, String displayName, String extra) {
+    private LocationField(String name, String displayName, String extra) {
         this.name = name;
         this.displayName = displayName;
         this.extra = extra;
     }
 
-    public static LocationFields fromName(String name) {
-        for (LocationFields locFields : LocationFields.values()) {
+    public static LocationField fromName(String name) {
+        for (LocationField locFields : LocationField.values()) {
             if (locFields.getName().equals(name)) {
                 return locFields;
             }
         }
 
-        throw new IllegalArgumentException("Отсутствует константа `LocationFields` с названием " + name);
+        throw new IllegalArgumentException("Отсутствует константа `LocationField` с названием " + name);
     }
 
     @Override

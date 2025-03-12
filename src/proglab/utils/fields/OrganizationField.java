@@ -5,7 +5,7 @@ import java.util.stream.Stream;
 
 import proglab.domain.OrganizationType;
 
-public enum OrganizationFields implements Fields {
+public enum OrganizationField implements Field {
     ID("id", "ID"),
     NAME("name", "название"),
     COORDINATES("coordinates", "координаты"),
@@ -20,24 +20,24 @@ public enum OrganizationFields implements Fields {
     private final String displayName;
     private final String extra;
 
-    private OrganizationFields(String name, String displayName) {
+    private OrganizationField(String name, String displayName) {
         this(name, displayName, null);
     }
 
-    private OrganizationFields(String name, String displayName, String extra) {
+    private OrganizationField(String name, String displayName, String extra) {
         this.name = name;
         this.displayName = displayName;
         this.extra = extra;
     }
 
-    public static OrganizationFields fromName(String name) {
-        for (OrganizationFields orgFields : OrganizationFields.values()) {
+    public static OrganizationField fromName(String name) {
+        for (OrganizationField orgFields : OrganizationField.values()) {
             if (orgFields.getName().equals(name)) {
                 return orgFields;
             }
         }
 
-        throw new IllegalArgumentException("Отсутствует константа `OrganizationFields` с названием " + name);
+        throw new IllegalArgumentException("Отсутствует константа `OrganizationField` с названием " + name);
     }
 
     @Override

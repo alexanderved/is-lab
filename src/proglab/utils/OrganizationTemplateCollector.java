@@ -4,10 +4,10 @@ import proglab.domain.OrganizationTemplate;
 import proglab.exceptions.InputDeniedException;
 import proglab.exceptions.InputFailedException;
 import proglab.exceptions.UnexpectedEODException;
-import proglab.utils.fields.AddressFields;
-import proglab.utils.fields.CoordinatesFields;
-import proglab.utils.fields.LocationFields;
-import proglab.utils.fields.OrganizationFields;
+import proglab.utils.fields.AddressField;
+import proglab.utils.fields.CoordinatesField;
+import proglab.utils.fields.LocationField;
+import proglab.utils.fields.OrganizationField;
 import proglab.utils.parsers.AddressParser;
 import proglab.utils.parsers.CoordinatesParser;
 import proglab.utils.parsers.LocationParser;
@@ -21,55 +21,55 @@ public class OrganizationTemplateCollector {
         InputRequestFactory inReqFactory = view.getInputRequestFactory();
 
         var coordinatesReq = inReqFactory
-            .createCompositeDataInputRequest(OrganizationFields.COORDINATES.getDisplayName(),
+            .createCompositeDataInputRequest(OrganizationField.COORDINATES.getDisplayName(),
                 OrganizationTemplateParser::parseCoordinates)
-            .addFieldRequest(CoordinatesFields.X,
-                inReqFactory.createPrimitiveDataInputRequest(CoordinatesFields.X.getDisplayName(),
+            .addFieldRequest(CoordinatesField.X,
+                inReqFactory.createPrimitiveDataInputRequest(CoordinatesField.X.getDisplayName(),
                     CoordinatesParser::parseX))
-            .addFieldRequest(CoordinatesFields.Y,
-                inReqFactory.createPrimitiveDataInputRequest(CoordinatesFields.Y.getDisplayName(),
+            .addFieldRequest(CoordinatesField.Y,
+                inReqFactory.createPrimitiveDataInputRequest(CoordinatesField.Y.getDisplayName(),
                     CoordinatesParser::parseY));
 
         var townReq = inReqFactory
-            .createCompositeDataInputRequest(AddressFields.TOWN.getDisplayName(), AddressParser::parseTown)
-            .addFieldRequest(LocationFields.X,
-                inReqFactory.createPrimitiveDataInputRequest(LocationFields.X.getDisplayName(),
+            .createCompositeDataInputRequest(AddressField.TOWN.getDisplayName(), AddressParser::parseTown)
+            .addFieldRequest(LocationField.X,
+                inReqFactory.createPrimitiveDataInputRequest(LocationField.X.getDisplayName(),
                     LocationParser::parseX))
-            .addFieldRequest(LocationFields.Y,
-                inReqFactory.createPrimitiveDataInputRequest(LocationFields.Y.getDisplayName(),
+            .addFieldRequest(LocationField.Y,
+                inReqFactory.createPrimitiveDataInputRequest(LocationField.Y.getDisplayName(),
                     LocationParser::parseY))
-            .addFieldRequest(LocationFields.Z,
-                    inReqFactory.createPrimitiveDataInputRequest(LocationFields.Z.getDisplayName(),
+            .addFieldRequest(LocationField.Z,
+                    inReqFactory.createPrimitiveDataInputRequest(LocationField.Z.getDisplayName(),
                             LocationParser::parseZ));
 
         var officialAddressReq = inReqFactory
-            .createCompositeDataInputRequest(OrganizationFields.OFFICIAL_ADDRESS.getDisplayName(),
+            .createCompositeDataInputRequest(OrganizationField.OFFICIAL_ADDRESS.getDisplayName(),
                     OrganizationTemplateParser::parseOfficialAddress)
-            .addFieldRequest(AddressFields.STREET,
-                inReqFactory.createPrimitiveDataInputRequest(AddressFields.STREET.getDisplayName(),
+            .addFieldRequest(AddressField.STREET,
+                inReqFactory.createPrimitiveDataInputRequest(AddressField.STREET.getDisplayName(),
                     AddressParser::parseStreet))
-            .addFieldRequest(AddressFields.TOWN, townReq);
+            .addFieldRequest(AddressField.TOWN, townReq);
 
         var templateReq = inReqFactory
             .createCompositeDataInputRequest("данные организации",
                 OrganizationTemplateParser::parse)
-            .addFieldRequest(OrganizationFields.NAME,
-                inReqFactory.createPrimitiveDataInputRequest(OrganizationFields.NAME.getDisplayName(),
+            .addFieldRequest(OrganizationField.NAME,
+                inReqFactory.createPrimitiveDataInputRequest(OrganizationField.NAME.getDisplayName(),
                     OrganizationTemplateParser::parseName))
-            .addFieldRequest(OrganizationFields.COORDINATES, coordinatesReq)
-            .addFieldRequest(OrganizationFields.ANNUAL_TURNOVER,
-                inReqFactory.createPrimitiveDataInputRequest(OrganizationFields.ANNUAL_TURNOVER.getDisplayName(),
+            .addFieldRequest(OrganizationField.COORDINATES, coordinatesReq)
+            .addFieldRequest(OrganizationField.ANNUAL_TURNOVER,
+                inReqFactory.createPrimitiveDataInputRequest(OrganizationField.ANNUAL_TURNOVER.getDisplayName(),
                     OrganizationTemplateParser::parseAnnualTurnover))
-            .addFieldRequest(OrganizationFields.FULL_NAME,
-                inReqFactory.createPrimitiveDataInputRequest(OrganizationFields.FULL_NAME.getDisplayName(),
+            .addFieldRequest(OrganizationField.FULL_NAME,
+                inReqFactory.createPrimitiveDataInputRequest(OrganizationField.FULL_NAME.getDisplayName(),
                     OrganizationTemplateParser::parseFullName))
-            .addFieldRequest(OrganizationFields.EMPLOYEES_COUNT,
-                inReqFactory.createPrimitiveDataInputRequest(OrganizationFields.EMPLOYEES_COUNT.getDisplayName(),
+            .addFieldRequest(OrganizationField.EMPLOYEES_COUNT,
+                inReqFactory.createPrimitiveDataInputRequest(OrganizationField.EMPLOYEES_COUNT.getDisplayName(),
                     OrganizationTemplateParser::parseEmployeesCount))
-            .addFieldRequest(OrganizationFields.TYPE,
-                inReqFactory.createPrimitiveDataInputRequest(OrganizationFields.TYPE.getDisplayName(),
-                    OrganizationFields.TYPE.getExtra(), OrganizationTemplateParser::parseType))
-            .addFieldRequest(OrganizationFields.OFFICIAL_ADDRESS,
+            .addFieldRequest(OrganizationField.TYPE,
+                inReqFactory.createPrimitiveDataInputRequest(OrganizationField.TYPE.getDisplayName(),
+                    OrganizationField.TYPE.getExtra(), OrganizationTemplateParser::parseType))
+            .addFieldRequest(OrganizationField.OFFICIAL_ADDRESS,
                 inReqFactory.createOptionalInputRequest(officialAddressReq));
 
         return view.input(templateReq);

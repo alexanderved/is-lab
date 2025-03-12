@@ -8,24 +8,24 @@ import proglab.domain.OrganizationTemplate;
 import proglab.domain.OrganizationType;
 import proglab.exceptions.DataParserException;
 import proglab.exceptions.InvalidFieldFormatException;
-import proglab.utils.fields.AddressFields;
-import proglab.utils.fields.CoordinatesFields;
-import proglab.utils.fields.OrganizationFields;
+import proglab.utils.fields.AddressField;
+import proglab.utils.fields.CoordinatesField;
+import proglab.utils.fields.OrganizationField;
 import proglab.utils.validators.OrganizationValidator;
 
 public final class OrganizationTemplateParser {
-    public static OrganizationTemplate parse(Map<OrganizationFields, Object> data)
+    public static OrganizationTemplate parse(Map<OrganizationField, Object> data)
             throws DataParserException {
         OrganizationTemplate.Builder builder = new OrganizationTemplate.Builder();
 
         try {
-            builder.setName((String) data.get(OrganizationFields.NAME));
-            builder.setCoordinates((Coordinates) data.get(OrganizationFields.COORDINATES));
-            builder.setAnnualTurnover((Float) data.get(OrganizationFields.ANNUAL_TURNOVER));
-            builder.setFullName((String) data.get(OrganizationFields.FULL_NAME));
-            builder.setEmployeesCount((Integer) data.get(OrganizationFields.EMPLOYEES_COUNT));
-            builder.setType((OrganizationType) data.get(OrganizationFields.TYPE));
-            builder.setOfficialAddress((Address) data.get(OrganizationFields.OFFICIAL_ADDRESS));
+            builder.setName((String) data.get(OrganizationField.NAME));
+            builder.setCoordinates((Coordinates) data.get(OrganizationField.COORDINATES));
+            builder.setAnnualTurnover((Float) data.get(OrganizationField.ANNUAL_TURNOVER));
+            builder.setFullName((String) data.get(OrganizationField.FULL_NAME));
+            builder.setEmployeesCount((Integer) data.get(OrganizationField.EMPLOYEES_COUNT));
+            builder.setType((OrganizationType) data.get(OrganizationField.TYPE));
+            builder.setOfficialAddress((Address) data.get(OrganizationField.OFFICIAL_ADDRESS));
         } catch (InvalidFieldFormatException | ClassCastException | NullPointerException e) {
             throw new DataParserException(e);
         }
@@ -40,13 +40,13 @@ public final class OrganizationTemplateParser {
     public static String parseName(String data) throws DataParserException {
         if (!OrganizationValidator.validateName(data)) {
             throw new DataParserException(
-                    new InvalidFieldFormatException(OrganizationFields.NAME.getName()));
+                    new InvalidFieldFormatException(OrganizationField.NAME.getName()));
         }
 
         return data;
     }
 
-    public static Coordinates parseCoordinates(Map<CoordinatesFields, Object> data)
+    public static Coordinates parseCoordinates(Map<CoordinatesField, Object> data)
             throws DataParserException {
         return CoordinatesParser.parse(data);
     }
@@ -55,7 +55,7 @@ public final class OrganizationTemplateParser {
         try {
             Float annualTurnover = Float.parseFloat(data);
             if (!OrganizationValidator.validateAnnualTurnover(annualTurnover)) {
-                throw new InvalidFieldFormatException(OrganizationFields.ANNUAL_TURNOVER.getName());
+                throw new InvalidFieldFormatException(OrganizationField.ANNUAL_TURNOVER.getName());
             }
 
             return annualTurnover;
@@ -73,7 +73,7 @@ public final class OrganizationTemplateParser {
         try {
             int employeesCount = Integer.parseInt(data);
             if (!OrganizationValidator.validateEmployeesCount(employeesCount)) {
-                throw new InvalidFieldFormatException(OrganizationFields.EMPLOYEES_COUNT.getName());
+                throw new InvalidFieldFormatException(OrganizationField.EMPLOYEES_COUNT.getName());
             }
 
             return employeesCount;
@@ -87,7 +87,7 @@ public final class OrganizationTemplateParser {
         try {
             OrganizationType type = OrganizationType.valueOf(data);
             if (!OrganizationValidator.validateType(type)) {
-                throw new InvalidFieldFormatException(OrganizationFields.TYPE.getName());
+                throw new InvalidFieldFormatException(OrganizationField.TYPE.getName());
             }
 
             return type;
@@ -97,7 +97,7 @@ public final class OrganizationTemplateParser {
         }
     }
 
-    public static Address parseOfficialAddress(Map<AddressFields, Object> data)
+    public static Address parseOfficialAddress(Map<AddressField, Object> data)
             throws DataParserException {
         return AddressParser.parse(data);
     }

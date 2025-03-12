@@ -1,6 +1,6 @@
 package proglab.utils.fields;
 
-public enum CoordinatesFields implements Fields {
+public enum CoordinatesField implements Field {
     X("x", "X"),
     Y("y", "Y");
 
@@ -8,24 +8,24 @@ public enum CoordinatesFields implements Fields {
     private final String displayName;
     private final String extra;
 
-    private CoordinatesFields(String name, String displayName) {
+    private CoordinatesField(String name, String displayName) {
         this(name, displayName, null);
     }
 
-    private CoordinatesFields(String name, String displayName, String extra) {
+    private CoordinatesField(String name, String displayName, String extra) {
         this.name = name;
         this.displayName = displayName;
         this.extra = extra;
     }
 
-    public static CoordinatesFields fromName(String name) {
-        for (CoordinatesFields coordsFields : CoordinatesFields.values()) {
+    public static CoordinatesField fromName(String name) {
+        for (CoordinatesField coordsFields : CoordinatesField.values()) {
             if (coordsFields.getName().equals(name)) {
                 return coordsFields;
             }
         }
 
-        throw new IllegalArgumentException("Отсутствует константа `CoordinatesFields` с названием " + name);
+        throw new IllegalArgumentException("Отсутствует константа `CoordinatesField` с названием " + name);
     }
 
     @Override

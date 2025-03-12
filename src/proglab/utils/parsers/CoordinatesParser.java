@@ -5,14 +5,14 @@ import java.util.Map;
 import proglab.domain.Coordinates;
 import proglab.exceptions.DataParserException;
 import proglab.exceptions.InvalidFieldFormatException;
-import proglab.utils.fields.CoordinatesFields;
+import proglab.utils.fields.CoordinatesField;
 import proglab.utils.validators.CoordinatesValidator;
 
 public final class CoordinatesParser {
-    public static Coordinates parse(Map<CoordinatesFields, Object> data)
+    public static Coordinates parse(Map<CoordinatesField, Object> data)
             throws DataParserException {
         try {
-            return new Coordinates((Float) data.get(CoordinatesFields.X), (Integer) data.get(CoordinatesFields.Y));
+            return new Coordinates((Float) data.get(CoordinatesField.X), (Integer) data.get(CoordinatesField.Y));
         } catch (InvalidFieldFormatException | ClassCastException
                 | NullPointerException e) {
             throw new DataParserException(e);
@@ -31,7 +31,7 @@ public final class CoordinatesParser {
         try {
             Integer y = Integer.parseInt(data);
             if (!CoordinatesValidator.validateY(y)) {
-                throw new InvalidFieldFormatException(CoordinatesFields.Y.getName());
+                throw new InvalidFieldFormatException(CoordinatesField.Y.getName());
             }
 
             return y;

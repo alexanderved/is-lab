@@ -1,6 +1,6 @@
 package proglab.utils.fields;
 
-public enum AddressFields implements Fields {
+public enum AddressField implements Field {
     STREET("street", "улица"),
     TOWN("town", "координаты города");
 
@@ -8,24 +8,24 @@ public enum AddressFields implements Fields {
     private final String displayName;
     private final String extra;
 
-    private AddressFields(String name, String displayName) {
+    private AddressField(String name, String displayName) {
         this(name, displayName, null);
     }
 
-    private AddressFields(String name, String displayName, String extra) {
+    private AddressField(String name, String displayName, String extra) {
         this.name = name;
         this.displayName = displayName;
         this.extra = extra;
     }
 
-    public static AddressFields fromName(String name) {
-        for (AddressFields addrFields : AddressFields.values()) {
+    public static AddressField fromName(String name) {
+        for (AddressField addrFields : AddressField.values()) {
             if (addrFields.getName().equals(name)) {
                 return addrFields;
             }
         }
 
-        throw new IllegalArgumentException("Отсутствует константа `AddressFields` с названием " + name);
+        throw new IllegalArgumentException("Отсутствует константа `AddressField` с названием " + name);
     }
 
     @Override

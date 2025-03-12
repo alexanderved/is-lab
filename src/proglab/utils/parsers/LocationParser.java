@@ -5,15 +5,15 @@ import java.util.Map;
 import proglab.domain.Location;
 import proglab.exceptions.DataParserException;
 import proglab.exceptions.InvalidFieldFormatException;
-import proglab.utils.fields.LocationFields;
+import proglab.utils.fields.LocationField;
 import proglab.utils.validators.LocationValidator;
 
 public final class LocationParser {
-    public static Location parse(Map<LocationFields, Object> data)
+    public static Location parse(Map<LocationField, Object> data)
             throws DataParserException {
         try {
-            return new Location((Long) data.get(LocationFields.X),
-                    (Long) data.get(LocationFields.Y), (Integer) data.get(LocationFields.Z));
+            return new Location((Long) data.get(LocationField.X),
+                    (Long) data.get(LocationField.Y), (Integer) data.get(LocationField.Z));
         } catch (InvalidFieldFormatException | ClassCastException
                 | NullPointerException e) {
             throw new DataParserException(e);
@@ -32,7 +32,7 @@ public final class LocationParser {
         try {
             Long y = Long.parseLong(data);
             if (!LocationValidator.validateY(y)) {
-                throw new InvalidFieldFormatException(LocationFields.Y.getName());
+                throw new InvalidFieldFormatException(LocationField.Y.getName());
             }
 
             return y;
@@ -46,7 +46,7 @@ public final class LocationParser {
         try {
             Integer z = Integer.parseInt(data);
             if (!LocationValidator.validateZ(z)) {
-                throw new InvalidFieldFormatException(LocationFields.Z.getName());
+                throw new InvalidFieldFormatException(LocationField.Z.getName());
             }
 
             return z;
