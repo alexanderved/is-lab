@@ -1,0 +1,22 @@
+package common.utils.validators;
+
+import java.util.Collection;
+import java.util.HashSet;
+
+import common.domain.Organization;
+
+public final class OrganizationCollectionValidator {
+    public static boolean validate(Collection<Organization> collection) {
+        HashSet<Integer> ids = new HashSet<>();
+
+        for (Organization org : collection) {
+            if (!OrganizationValidator.validate(org)) {
+                return false;
+            }
+
+            ids.add(org.getId());
+        }
+
+        return collection.size() == ids.size();
+    }
+}
