@@ -3,12 +3,13 @@ package proglab.domain;
 import java.util.Objects;
 
 import proglab.exceptions.InvalidFieldFormatException;
+import proglab.utils.Validatable;
 import proglab.utils.validators.AddressValidator;
 
 /**
  * Класс адреса.
  */
-public final class Address {
+public final class Address implements Validatable {
     private final String street; // Строка не может быть пустой, Поле может быть null
     private final Location town; // Поле не может быть null
 
@@ -43,6 +44,11 @@ public final class Address {
      */
     public Location getTown() {
         return town;
+    }
+
+    @Override
+    public boolean isValid() {
+        return AddressValidator.validate(this);
     }
 
     @Override

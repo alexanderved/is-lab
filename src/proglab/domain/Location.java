@@ -3,12 +3,13 @@ package proglab.domain;
 import java.util.Objects;
 
 import proglab.exceptions.InvalidFieldFormatException;
+import proglab.utils.Validatable;
 import proglab.utils.validators.LocationValidator;
 
 /**
  * Класс координат локации в трехмерном пространстве.
  */
-public final class Location {
+public final class Location implements Validatable {
     private final long x;
     private final Long y; // Поле не может быть null
     private final Integer z; // Поле не может быть null
@@ -52,6 +53,11 @@ public final class Location {
      */
     public Integer getZ() {
         return z;
+    }
+
+    @Override
+    public boolean isValid() {
+        return LocationValidator.validate(this);
     }
 
     @Override

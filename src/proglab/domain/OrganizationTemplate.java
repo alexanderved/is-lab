@@ -3,12 +3,13 @@ package proglab.domain;
 import java.util.Objects;
 
 import proglab.exceptions.InvalidFieldFormatException;
-import proglab.utils.validators.OrganizationValidator;
+import proglab.utils.Validatable;
+import proglab.utils.validators.OrganizationTemplateValidator;
 
 /**
  * Шаблон организации, представляющий собой набор данных этой организации.
  */
-public final class OrganizationTemplate implements Comparable<Organization> {
+public final class OrganizationTemplate implements Validatable, Comparable<Organization> {
     private final String name;
     private final Coordinates coordinates;
     private final Float annualTurnover;
@@ -77,6 +78,11 @@ public final class OrganizationTemplate implements Comparable<Organization> {
      */
     public Address getOfficialAddress() {
         return officialAddress;
+    }
+
+    @Override
+    public boolean isValid() {
+        return OrganizationTemplateValidator.validate(this);
     }
 
     @Override
@@ -161,7 +167,7 @@ public final class OrganizationTemplate implements Comparable<Organization> {
          * @throws InvalidFieldFormatException если поле не удовлетворяет формату
          */
         public Builder setName(String name) throws InvalidFieldFormatException {
-            if (!OrganizationValidator.validateName(name)) {
+            if (!OrganizationTemplateValidator.validateName(name)) {
                 throw new InvalidFieldFormatException("name");
             }
             this.name = name;
@@ -178,7 +184,7 @@ public final class OrganizationTemplate implements Comparable<Organization> {
          */
         public Builder setCoordinates(Coordinates coordinates)
                 throws InvalidFieldFormatException {
-            if (!OrganizationValidator.validateCoordinates(coordinates)) {
+            if (!OrganizationTemplateValidator.validateCoordinates(coordinates)) {
                 throw new InvalidFieldFormatException("coordinates");
             }
             this.coordinates = coordinates;
@@ -195,7 +201,7 @@ public final class OrganizationTemplate implements Comparable<Organization> {
          */
         public Builder setAnnualTurnover(Float annualTurnover)
                 throws InvalidFieldFormatException {
-            if (!OrganizationValidator.validateAnnualTurnover(annualTurnover)) {
+            if (!OrganizationTemplateValidator.validateAnnualTurnover(annualTurnover)) {
                 throw new InvalidFieldFormatException("annualTurnover");
             }
             this.annualTurnover = annualTurnover;
@@ -224,7 +230,7 @@ public final class OrganizationTemplate implements Comparable<Organization> {
          */
         public Builder setEmployeesCount(int employeesCount)
                 throws InvalidFieldFormatException {
-            if (!OrganizationValidator.validateEmployeesCount(employeesCount)) {
+            if (!OrganizationTemplateValidator.validateEmployeesCount(employeesCount)) {
                 throw new InvalidFieldFormatException("employeesCount");
             }
             this.employeesCount = employeesCount;
@@ -240,7 +246,7 @@ public final class OrganizationTemplate implements Comparable<Organization> {
          * @throws InvalidFieldFormatException если поле не удовлетворяет формату
          */
         public Builder setType(OrganizationType type) throws InvalidFieldFormatException {
-            if (!OrganizationValidator.validateType(type)) {
+            if (!OrganizationTemplateValidator.validateType(type)) {
                 throw new InvalidFieldFormatException("type");
             }
             this.type = type;

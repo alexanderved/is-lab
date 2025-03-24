@@ -3,12 +3,13 @@ package proglab.domain;
 import java.util.Objects;
 
 import proglab.exceptions.InvalidFieldFormatException;
+import proglab.utils.Validatable;
 import proglab.utils.validators.CoordinatesValidator;
 
 /** 
  * Класс координат на плоскости.
  */
-public final class Coordinates {
+public final class Coordinates implements Validatable {
     private final float x;
     private final Integer y; // Поле не может быть null
 
@@ -38,6 +39,11 @@ public final class Coordinates {
      */
     public Integer getY() {
         return y;
+    }
+
+    @Override
+    public boolean isValid() {
+        return CoordinatesValidator.validate(this);
     }
 
     @Override

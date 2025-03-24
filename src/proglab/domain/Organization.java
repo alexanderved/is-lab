@@ -3,10 +3,13 @@ package proglab.domain;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
+import proglab.utils.Validatable;
+import proglab.utils.validators.OrganizationValidator;
+
 /**
  * Класс организации
  */
-public final class Organization implements Comparable<Organization> {
+public final class Organization implements Validatable, Comparable<Organization> {
     private final int id; // Значение поля должно быть больше 0,
                           // Значение этого поля должно быть уникальным,
                           // Значение этого поля должно генерироваться автоматически
@@ -131,6 +134,11 @@ public final class Organization implements Comparable<Organization> {
      */
     public Address getOfficialAddress() {
         return officialAddress;
+    }
+
+    @Override
+    public boolean isValid() {
+        return OrganizationValidator.validate(this);
     }
 
     @Override
