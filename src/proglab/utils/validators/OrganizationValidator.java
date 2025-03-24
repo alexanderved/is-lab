@@ -25,11 +25,11 @@ public final class OrganizationValidator {
     }
 
     public static boolean validateName(String name) {
-        return name != null && !name.isEmpty();
+        return OrganizationTemplateValidator.validateName(name);
     }
 
     public static boolean validateCoordinates(Coordinates coordinates) {
-        return CoordinatesValidator.validate(coordinates);
+        return OrganizationTemplateValidator.validateCoordinates(coordinates);
     }
 
     public static boolean validateCreationDate(ZonedDateTime creationDate) {
@@ -37,18 +37,18 @@ public final class OrganizationValidator {
     }
 
     public static boolean validateAnnualTurnover(Float annualTurnover) {
-        return annualTurnover == null || annualTurnover > 0;
+        return OrganizationTemplateValidator.validateAnnualTurnover(annualTurnover);
     }
 
     public static boolean validateEmployeesCount(int employeesCount) {
-        return employeesCount > 0;
+        return OrganizationTemplateValidator.validateEmployeesCount(employeesCount);
     }
 
     public static boolean validateType(OrganizationType type) {
-        return type != null;
+        return OrganizationTemplateValidator.validateType(type);
     }
 
     public static boolean validateOfficialAddress(Address officialAddress) {
-        return officialAddress == null || AddressValidator.validate(officialAddress);
+        return OrganizationTemplateValidator.validateOfficialAddress(officialAddress);
     }
 }
