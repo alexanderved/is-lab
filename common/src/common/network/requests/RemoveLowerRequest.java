@@ -15,4 +15,9 @@ public class RemoveLowerRequest extends NetworkRequest {
     public OrganizationTemplate getOrganizationTemplate() {
         return template;
     }
+
+    @Override
+    public boolean isValid() {
+        return template.isValid();
+    }
 }

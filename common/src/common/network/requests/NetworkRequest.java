@@ -1,6 +1,8 @@
 package common.network.requests;
 
-public abstract class NetworkRequest {
+import common.utils.Validatable;
+
+public abstract class NetworkRequest implements Validatable {
     private final String name;
 
     protected NetworkRequest(String name) {
@@ -9,5 +11,10 @@ public abstract class NetworkRequest {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public boolean isValid() {
+        return true;
     }
 }
