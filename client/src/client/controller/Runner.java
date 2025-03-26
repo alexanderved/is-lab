@@ -11,6 +11,9 @@ import client.view.inputrequests.CommandInputRequest;
 import client.view.inputrequests.InputRequestFactory;
 import common.exceptions.NetworkCommunicationFailedException;
 
+/**
+ * Исполнитель пользовательских команд.
+ */
 public class Runner {
     private State state = State.STOPPED;
     private View view;
@@ -146,5 +149,4 @@ public class Runner {
     private enum State {
         STOPPED, RUNNING;
     }
-
 }

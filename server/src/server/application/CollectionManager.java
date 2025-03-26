@@ -100,15 +100,28 @@ public class CollectionManager {
     }
 
     /**
+     * @return коллекцию, элементы которой отсортированы по имени
+     */
+    public List<Organization> getSortedCollection() {
+        return collection.stream()
+                .sorted((a, b) -> a.getName().compareTo(b.getName()))
+                .toList();
+    }
+
+    /**
      * Добавляет в коллекцию новую организацию, созданную по шаблону.
      * 
      * @param template Шаблон новой организации
+     * @return ID новой организации
      * @see OrganizationTemplate
      */
-    public void add(OrganizationTemplate template) {
+    public int add(OrganizationTemplate template) {
         updateLastModDate();
 
-        collection.add(new Organization(idGen.generateID(), template));
+        int newId = idGen.generateID();
+        collection.add(new Organization(newId, template));
+
+        return newId;
     }
 
     /**
@@ -212,27 +225,6 @@ public class CollectionManager {
     }
 
     /**
-     * Преобразует все организации, полные названия которых начинаются
-     * с данной подстроки, в строку.
-     * @param fullName Подстрока, с которой должны начинаться
-     *                 полные названия организаций
-     * @return строковое представление организаций, удовлетворяющих требованиям
-     */
-    public String toStringFilteredFullName(String fullName) {
-        String s = "{\n";
-        for (Organization org : collection) {
-            if (org.getFullName() == null || !org.getFullName().startsWith(fullName)) {
-                continue;
-            }
-
-            s += org.toString() + ";\n";
-        }
-        s += "}";
-
-        return s;
-    }
-
-    /**
      * @return список годовых оборотов всех организаций
      */
     public List<Float> getAnnualTurnovers() {
@@ -240,16 +232,5 @@ public class CollectionManager {
             .map((org) -> org.getAnnualTurnover())
             .filter((annualTurnover) -> annualTurnover != null)
             .toList();
-    }
-
-    @Override
-    public String toString() {
-        String s = "{\n";
-        for (Organization org : collection) {
-            s += org.toString() + ";\n";
-        }
-        s += "}";
-
-        return s;
     }
 }
