@@ -13,7 +13,7 @@ import common.network.responses.NetworkResponse;
 import server.network.connections.Connection;
 
 public class TCPChannelConnection extends Connection implements Closeable {
-    private Set<SingleTCPChannelConnection> clients = new HashSet<>();
+    public Set<SingleTCPChannelConnection> clients = new HashSet<>();
 
     @Override
     public void respond(Function<NetworkRequest, NetworkResponse> responder)

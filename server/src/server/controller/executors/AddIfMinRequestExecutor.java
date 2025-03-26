@@ -22,7 +22,7 @@ public class AddIfMinRequestExecutor extends RequestExecutor {
 
         AddIfMinRequest addReq = (AddIfMinRequest) req;
         OrganizationTemplate template = addReq.getOrganizationTemplate();
-        if (template.compareTo(manager.min()) >= 0) {
+        if (manager.min() != null && template.compareTo(manager.min()) >= 0) {
             return new FailureResponse("Новая организация не добавлена в коллекцию, так как"
                     + " ее значение не меньше значения наименьшего элемента коллекции");
         }

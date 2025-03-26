@@ -1,5 +1,6 @@
 package common.domain;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import common.exceptions.InvalidFieldFormatException;
@@ -9,7 +10,7 @@ import common.utils.validators.AddressValidator;
 /**
  * Класс адреса.
  */
-public final class Address implements Validatable {
+public final class Address implements Validatable, Serializable {
     private final String street; // Строка не может быть пустой, Поле может быть null
     private final Location town; // Поле не может быть null
 

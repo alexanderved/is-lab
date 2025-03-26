@@ -1,5 +1,6 @@
 package common.domain;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import common.exceptions.InvalidFieldFormatException;
@@ -9,7 +10,7 @@ import common.utils.validators.CoordinatesValidator;
 /** 
  * Класс координат на плоскости.
  */
-public final class Coordinates implements Validatable {
+public final class Coordinates implements Validatable, Serializable {
     private final float x;
     private final Integer y; // Поле не может быть null
 

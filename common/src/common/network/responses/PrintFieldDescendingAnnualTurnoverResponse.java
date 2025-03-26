@@ -8,8 +8,9 @@ public class PrintFieldDescendingAnnualTurnoverResponse extends SuccessResponse 
     public PrintFieldDescendingAnnualTurnoverResponse(List<Float> annualTurnovers) {
         super(null);
 
-        this.annualTurnovers = annualTurnovers;
-        this.annualTurnovers.sort((a, b) -> -a.compareTo(b));
+        this.annualTurnovers = annualTurnovers.stream()
+                .sorted((a, b) -> -a.compareTo(b))
+                .toList();
     }
 
     public List<Float> getDescendingAnnualTurnovers() {

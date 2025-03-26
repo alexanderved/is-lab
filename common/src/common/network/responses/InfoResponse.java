@@ -36,11 +36,11 @@ public class InfoResponse extends SuccessResponse {
 
     private static String getInfoString(String collectionType, int collectionSize,
             ZonedDateTime collectionInitDate, ZonedDateTime collectionLastModDate) {
-        String s = "Информация о коллекции:";
-        s += "\tТип: " + collectionType;
-        s += "\tКоличество элементов: " + collectionSize;
-        s += "\tДата инициализации: " + collectionInitDate;
-        s += "\tДата модификации: " + collectionLastModDate;
+        String s = "Информация о коллекции:\n";
+        s += "\tТип: " + collectionType + "\n";
+        s += "\tКоличество элементов: " + collectionSize + "\n";
+        s += "\tДата инициализации: " + collectionInitDate + "\n";
+        s += "\tДата модификации: " + collectionLastModDate + "\n";
 
         return s;
 

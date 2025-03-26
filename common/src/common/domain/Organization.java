@@ -1,5 +1,6 @@
 package common.domain;
 
+import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
@@ -9,7 +10,7 @@ import common.utils.validators.OrganizationValidator;
 /**
  * Класс организации
  */
-public final class Organization implements Validatable, Comparable<Organization> {
+public final class Organization implements Validatable, Comparable<Organization>, Serializable {
     private final int id; // Значение поля должно быть больше 0,
                           // Значение этого поля должно быть уникальным,
                           // Значение этого поля должно генерироваться автоматически

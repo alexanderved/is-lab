@@ -1,5 +1,8 @@
 package client;
 
+import java.io.IOException;
+import java.net.InetAddress;
+
 import client.controller.Runner;
 import client.controller.commands.AddCommand;
 import client.controller.commands.AddIfMaxCommand;
@@ -18,16 +21,25 @@ import client.controller.commands.RemoveByIDCommand;
 import client.controller.commands.RemoveLowerCommand;
 import client.controller.commands.ShowCommand;
 import client.controller.commands.UpdateCommand;
-import client.network.FakeServerConnection;
-import client.network.ServerConnection;
+import client.network.TCPStreamServerConnection;
 import client.view.View;
 import client.view.cli.Cli;
 
 public class Main {
     public static void main(String[] args) {
         View view = new Cli();
-        ServerConnection conn = new FakeServerConnection();
         GeneralCommandParser cmdParser = new GeneralCommandParser();
+
+        TCPStreamServerConnection conn;
+        try {
+            System.out.println("1");
+            conn = new TCPStreamServerConnection(InetAddress.getLoopbackAddress(), 6789);
+            System.out.println("2");
+        } catch (IOException e) {
+            view.error(e.getMessage());
+
+            return;
+        }
 
         cmdParser.register("", new EmptyCommand.Parser());
         cmdParser.register("help", new HelpCommand.Parser());
@@ -52,5 +64,11 @@ public class Main {
         Runner runner = new Runner(view, conn, cmdParser);
 
         runner.run();
+
+        try {
+            conn.close();
+        } catch (IOException e) {
+            
+        }
     }
 }

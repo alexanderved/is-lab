@@ -1,5 +1,6 @@
 package common.domain;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import common.exceptions.InvalidFieldFormatException;
@@ -9,7 +10,7 @@ import common.utils.validators.LocationValidator;
 /**
  * Класс координат локации в трехмерном пространстве.
  */
-public final class Location implements Validatable {
+public final class Location implements Validatable, Serializable {
     private final long x;
     private final Long y; // Поле не может быть null
     private final Integer z; // Поле не может быть null

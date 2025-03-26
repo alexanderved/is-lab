@@ -22,7 +22,7 @@ public class AddIfMaxRequestExecutor extends RequestExecutor {
 
         AddIfMaxRequest addReq = (AddIfMaxRequest) req;
         OrganizationTemplate template = addReq.getOrganizationTemplate();
-        if (template.compareTo(manager.max()) <= 0) {
+        if (manager.max() != null && template.compareTo(manager.max()) <= 0) {
             return new FailureResponse("Новая организация не добавлена в коллекцию, так как"
                     + " ее значение не превышает значение наибольшего элемента коллекции");
         }

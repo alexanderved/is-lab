@@ -36,8 +36,6 @@ public class ExecuteScriptCommand extends Command {
         } catch (IOException e) {
             runner.getView().error("Ошибка исполнения скрипта: " + e.getMessage());
         }
-
-        throw new UnsupportedOperationException();
     }
 
     /**

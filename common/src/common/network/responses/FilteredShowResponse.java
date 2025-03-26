@@ -24,6 +24,6 @@ public class FilteredShowResponse extends SuccessResponse {
                 .map(Organization::toString)
                 .toList();
 
-        return "{\n" + String.join(";\n", orgInfo) + "}";
+        return "{\n" + String.join(";\n", orgInfo) + "\n}";
     }
 }

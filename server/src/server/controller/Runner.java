@@ -5,23 +5,23 @@ import common.network.responses.ErrorResponse;
 import server.application.CollectionManager;
 import server.controller.executors.RequestExecutor;
 import server.exceptions.UnsupportedRequestException;
-import server.network.connections.Connection;
+import server.network.providers.ConnectionProvider;
 
 /**
  * Обработчик запросов к серверу.
  */
 public class Runner {
     private State state = State.STOPPED;
-    private Connection connection;
+    private ConnectionProvider provider;
     private RequestExecutor reqExecutor;
     private CollectionManager collectionManager;
 
-    public Runner(Connection connection, RequestExecutor reqExecutor, CollectionManager collectionManager) {
-        if (connection == null) {
+    public Runner(ConnectionProvider provider, RequestExecutor reqExecutor, CollectionManager collectionManager) {
+        if (provider == null) {
             throw new IllegalArgumentException(
-                    "`connection` в классе `Runner` не должно быть null");
+                    "`provider` в классе `Runner` не должно быть null");
         }
-        this.connection = connection;
+        this.provider = provider;
 
         if (reqExecutor == null) {
             throw new IllegalArgumentException(
@@ -37,25 +37,25 @@ public class Runner {
     }
 
     /**
-     * @return соединение с клиентами, от которых поступают запросы
-     * @see Connection
+     * @return поставщик соединений с клиентами, от которых поступают запросы
+     * @see ConnectionProvider
      */
-    public Connection getConnection() {
-        return connection;
+    public ConnectionProvider getConnectionProvider() {
+        return provider;
     }
 
     /**
-     * Устанавливает соединение с клиентами, от которых поступают запросы
-     * @param connection соединение с клиентами, от которых поступают запросы
-     * @see Connection
+     * Устанавливает поставщик соединений с клиентами, от которых поступают запросы
+     * @param provider поставщик соединений с клиентами, от которых поступают запросы
+     * @see ConnectionProvider
      */
-    public void setConnection(Connection connection) {
-        if (connection == null) {
+    public void setConnectionProvider(ConnectionProvider provider) {
+        if (provider == null) {
             throw new IllegalArgumentException(
-                    "`connection` в классе `Runner` не должно быть null");
+                    "`provider` в классе `Runner` не должно быть null");
         }
 
-        this.connection = connection;
+        this.provider = provider;
     }
 
     /**
@@ -105,13 +105,14 @@ public class Runner {
 
         while (getState() == State.RUNNING) {
             try {
-                connection.respond((req) -> {
-                    try {
-                        return reqExecutor.execute(req, this);
-                    } catch (UnsupportedRequestException reqException) {
-                        return new ErrorResponse(reqException.getMessage());
-                    }
-                });
+                provider.provide()
+                        .respond((req) -> {
+                            try {
+                                return reqExecutor.execute(req, this);
+                            } catch (UnsupportedRequestException reqException) {
+                                return new ErrorResponse(reqException.getMessage());
+                            }
+                        });
             } catch (NetworkCommunicationFailedException e) {
                 stop();
             }

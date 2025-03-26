@@ -16,6 +16,8 @@ public class ClearRequestExecutor extends RequestExecutor {
             throw new UnsupportedRequestException(req);
         }
 
+        runner.getCollectionManager().clear();
+
         return new SuccessResponse("Коллекция очищена");
     }
 }

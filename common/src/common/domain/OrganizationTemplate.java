@@ -1,5 +1,6 @@
 package common.domain;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import common.exceptions.InvalidFieldFormatException;
@@ -9,7 +10,7 @@ import common.utils.validators.OrganizationTemplateValidator;
 /**
  * Шаблон организации, представляющий собой набор данных этой организации.
  */
-public final class OrganizationTemplate implements Validatable, Comparable<Organization> {
+public final class OrganizationTemplate implements Validatable, Comparable<Organization>, Serializable {
     private final String name;
     private final Coordinates coordinates;
     private final Float annualTurnover;

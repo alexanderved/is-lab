@@ -1,5 +1,6 @@
 package server.network.providers;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.ServerSocketChannel;
@@ -9,11 +10,11 @@ import common.exceptions.NetworkCommunicationFailedException;
 import server.network.connections.Connection;
 import server.network.connections.tcpchannel.TCPChannelConnection;
 
-public class TCPChannelProvider extends Provider {
+public class TCPChannelConnectionProvider extends ConnectionProvider implements Closeable {
     private TCPChannelConnection connection = new TCPChannelConnection();
     private ServerSocketChannel serverChannel;
 
-    public TCPChannelProvider(SocketAddress addr) throws IOException {
+    public TCPChannelConnectionProvider(SocketAddress addr) throws IOException {
         serverChannel = ServerSocketChannel.open();
         serverChannel.bind(addr);
         serverChannel.configureBlocking(false);
@@ -34,6 +35,15 @@ public class TCPChannelProvider extends Provider {
         SocketChannel channel = null;
         while ((channel = serverChannel.accept()) != null) {
             connection.addClient(channel);
+        }
+    }
+
+    @Override
+    public void close() throws IOException {
+        try {
+            connection.close();
+        } finally {
+            serverChannel.close();
         }
     }
 }
