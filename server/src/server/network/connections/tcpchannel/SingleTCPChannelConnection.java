@@ -79,7 +79,6 @@ class SingleTCPChannelConnection extends Connection implements Closeable {
 
             NetworkRequest req = (NetworkRequest) CustomDeserializer.deserialize(serializedRequest);
             NetworkResponse res = responder.apply(req);
-            System.out.println(res.toString());
 
             CustomSerializer.serializeTo(byteOutput, res);
             ByteBuffer serializedResponse = ByteBuffer.wrap(byteOutput.toByteArray());

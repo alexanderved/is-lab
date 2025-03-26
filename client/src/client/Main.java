@@ -32,9 +32,7 @@ public class Main {
 
         TCPStreamServerConnection conn;
         try {
-            System.out.println("1");
             conn = new TCPStreamServerConnection(InetAddress.getLoopbackAddress(), 6789);
-            System.out.println("2");
         } catch (IOException e) {
             view.error(e.getMessage());
 
@@ -68,7 +66,7 @@ public class Main {
         try {
             conn.close();
         } catch (IOException e) {
-            
+
         }
     }
 }
