@@ -27,13 +27,11 @@ class CommandInputRequest
     @Override
     public Command request()
             throws InputDeniedException, InputFailedException, UnexpectedEODException {
-        /* try {
+        try {
             return runner.getCommandParser().parse(cli.input("> "), runner);
         } catch (WrongNumberOfArgumentsException | InvalidArgumentFormatException
                 | UnsupportedCommandException e) {
             throw new InputFailedException(e.getMessage());
-        } */
-
-        throw new UnsupportedOperationException();
+        }
     }
 }

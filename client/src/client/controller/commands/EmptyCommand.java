@@ -10,7 +10,7 @@ import common.utils.CommandInfo;
  */
 public final class EmptyCommand extends Command {
     private static final String CMD_NAME = CommandInfo.EMPTY.getName();
-    private static final int NB_ARGUMENTS = 0;
+    private static final int NB_ARGUMENTS = CommandInfo.EMPTY.getArguments().length;
 
     private EmptyCommand(Runner runner) {
         super(runner);

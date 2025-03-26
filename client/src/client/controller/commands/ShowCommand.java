@@ -1,10 +1,13 @@
 package client.controller.commands;
 
 import client.controller.Runner;
+import client.exceptions.ServerRequestFailedException;
 import client.exceptions.UnsupportedCommandException;
 import client.exceptions.WrongNumberOfArgumentsException;
 import common.network.requests.NetworkRequest;
 import common.network.requests.ShowRequest;
+import common.network.responses.ErrorResponse;
+import common.network.responses.NetworkResponse;
 import common.utils.CommandInfo;
 
 /**
@@ -20,10 +23,15 @@ public final class ShowCommand extends Command {
     }
 
     @Override
-    public void execute() {
+    public void execute() throws ServerRequestFailedException {
         NetworkRequest req = new ShowRequest();
+        NetworkResponse res = runner.getServerConnection().request(req);
 
-        throw new UnsupportedOperationException();
+        if (res instanceof ErrorResponse) {
+            runner.getView().error(res.getMessage());
+        } else {
+            runner.getView().output(res.getMessage());
+        }
     }
 
     /**

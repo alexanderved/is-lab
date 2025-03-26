@@ -22,7 +22,7 @@ public final class HelpCommand extends Command {
         View view = runner.getView();
 
         for (CommandInfo cmdInfo : CommandInfo.values()) {
-            if (cmdInfo.getName() == null) {
+            if (cmdInfo == CommandInfo.EMPTY) {
                 continue;
             }
 

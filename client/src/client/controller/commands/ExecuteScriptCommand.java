@@ -25,17 +25,17 @@ public class ExecuteScriptCommand extends Command {
 
     @Override
     public void execute() {
-        /* runner.getView().output("Начинается исполнение скрипта `" + script + "`");
+        runner.getView().output("Начинается исполнение скрипта `" + script + "`");
 
         try (FileInputView fileInputView = new FileInputView(script, runner.getView())) {
             Runner scripRunner = new Runner(
-                fileInputView, runner.getCollectionManager(), runner.getCommandParser());
+                fileInputView, runner.getServerConnection(), runner.getCommandParser());
             scripRunner.run();
 
             runner.getView().output("Исполнение скрипта `" + script + "` завершено");
         } catch (IOException e) {
             runner.getView().error("Ошибка исполнения скрипта: " + e.getMessage());
-        } */
+        }
 
         throw new UnsupportedOperationException();
     }

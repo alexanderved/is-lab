@@ -1,6 +1,7 @@
 package client.controller.commands;
 
 import client.controller.Runner;
+import client.exceptions.ServerRequestFailedException;
 
 /**
  * Абстрактная команда
@@ -27,5 +28,5 @@ public abstract class Command {
     /**
      * Исполняет команду.
      */
-    public abstract void execute();
+    public abstract void execute() throws ServerRequestFailedException;
 }

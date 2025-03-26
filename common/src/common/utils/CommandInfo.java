@@ -4,7 +4,7 @@ package common.utils;
  * Информация о команде.
  */
 public enum CommandInfo {
-    EMPTY(null, null, null),
+    EMPTY("", new String[] {}, ""),
     HELP("help", new String[] {}, "вывести справку по доступным командам"),
     INFO("info", new String[] {}, "вывести в стандартный поток вывода информацию о коллекции"),
     SHOW("show", new String[] {},
@@ -47,7 +47,7 @@ public enum CommandInfo {
      */
     public static CommandInfo fromName(String name) {
         for (CommandInfo cmdInfo : CommandInfo.values()) {
-            if (cmdInfo.getName() != null && cmdInfo.getName().equals(name)) {
+            if (cmdInfo.getName().equals(name)) {
                 return cmdInfo;
             }
         }
