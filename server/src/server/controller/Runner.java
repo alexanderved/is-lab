@@ -34,7 +34,6 @@ public class Runner {
                     "`collectionManager` в классе `Runner` не должно быть null");
         }
         this.collectionManager = collectionManager;
-
     }
 
     /**

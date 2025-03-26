@@ -17,7 +17,7 @@ import common.network.requests.NetworkRequest;
 import common.network.responses.NetworkResponse;
 import server.network.connections.Connection;
 
-class TCPChannelSingleClientConnection extends Connection implements Closeable {
+class SingleTCPChannelConnection extends Connection implements Closeable {
     private SocketChannel channel;
     private ByteBuffer reqLengthBuffer = ByteBuffer.allocate(Integer.BYTES);
     private ByteBuffer resLengthBuffer = ByteBuffer.allocate(Integer.BYTES);
@@ -26,14 +26,10 @@ class TCPChannelSingleClientConnection extends Connection implements Closeable {
     private ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
     private ObjectOutputStream responseOutput;
 
-    TCPChannelSingleClientConnection(SocketChannel channel) throws NetworkCommunicationFailedException {
+    SingleTCPChannelConnection(SocketChannel channel) throws IOException {
         this.channel = channel;
-
-        try {
-            responseOutput = new ObjectOutputStream(byteOutput);
-        } catch (IOException e) {
-            throw new NetworkCommunicationFailedException(e);
-        }
+        this.channel.configureBlocking(false);
+        responseOutput = new ObjectOutputStream(byteOutput);
     }
 
     @Override
