@@ -2,6 +2,7 @@ package client.controller.commands;
 
 import client.controller.Runner;
 import common.domain.OrganizationTemplate;
+import common.exceptions.NetworkCommunicationFailedException;
 import common.network.requests.NetworkRequest;
 import common.network.responses.ErrorResponse;
 import common.network.responses.NetworkResponse;
@@ -9,7 +10,6 @@ import common.utils.CommandInfo;
 import common.network.requests.AddIfMaxRequest;
 import client.exceptions.InputDeniedException;
 import client.exceptions.InputFailedException;
-import client.exceptions.ServerRequestFailedException;
 import client.exceptions.UnexpectedEODException;
 import client.exceptions.UnsupportedCommandException;
 import client.exceptions.WrongNumberOfArgumentsException;
@@ -36,7 +36,7 @@ public class AddIfMaxCommand extends Command {
     }
 
     @Override
-    public void execute() throws ServerRequestFailedException {
+    public void execute() throws NetworkCommunicationFailedException {
         NetworkRequest req = new AddIfMaxRequest(template);
         NetworkResponse res = runner.getServerConnection().request(req);
 

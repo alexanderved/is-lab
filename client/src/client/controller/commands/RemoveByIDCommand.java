@@ -2,9 +2,9 @@ package client.controller.commands;
 
 import client.controller.Runner;
 import client.exceptions.InvalidArgumentFormatException;
-import client.exceptions.ServerRequestFailedException;
 import client.exceptions.UnsupportedCommandException;
 import client.exceptions.WrongNumberOfArgumentsException;
+import common.exceptions.NetworkCommunicationFailedException;
 import common.network.requests.NetworkRequest;
 import common.network.requests.RemoveByIDRequest;
 import common.network.responses.ErrorResponse;
@@ -27,7 +27,7 @@ public class RemoveByIDCommand extends Command {
     }
     
     @Override
-    public void execute() throws ServerRequestFailedException {
+    public void execute() throws NetworkCommunicationFailedException {
         NetworkRequest req = new RemoveByIDRequest(id);
         NetworkResponse res = runner.getServerConnection().request(req);
 

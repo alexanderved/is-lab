@@ -2,6 +2,7 @@ package client.controller.commands;
 
 import client.controller.Runner;
 import common.domain.OrganizationTemplate;
+import common.exceptions.NetworkCommunicationFailedException;
 import common.network.requests.NetworkRequest;
 import common.network.requests.UpdateRequest;
 import common.network.responses.ErrorResponse;
@@ -10,7 +11,6 @@ import common.utils.CommandInfo;
 import client.exceptions.InputDeniedException;
 import client.exceptions.InputFailedException;
 import client.exceptions.InvalidArgumentFormatException;
-import client.exceptions.ServerRequestFailedException;
 import client.exceptions.UnexpectedEODException;
 import client.exceptions.UnsupportedCommandException;
 import client.exceptions.WrongNumberOfArgumentsException;
@@ -38,7 +38,7 @@ public class UpdateCommand extends Command {
     }
     
     @Override
-    public void execute() throws ServerRequestFailedException {
+    public void execute() throws NetworkCommunicationFailedException {
         NetworkRequest req = new UpdateRequest(id, template);
         NetworkResponse res = runner.getServerConnection().request(req);
 

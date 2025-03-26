@@ -1,7 +1,7 @@
 package client.controller.commands;
 
 import client.controller.Runner;
-import client.exceptions.ServerRequestFailedException;
+import common.exceptions.NetworkCommunicationFailedException;
 
 /**
  * Абстрактная команда
@@ -28,5 +28,5 @@ public abstract class Command {
     /**
      * Исполняет команду.
      */
-    public abstract void execute() throws ServerRequestFailedException;
+    public abstract void execute() throws NetworkCommunicationFailedException;
 }

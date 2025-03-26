@@ -2,9 +2,9 @@ package client.controller.commands;
 
 import client.controller.Runner;
 import client.exceptions.InvalidArgumentFormatException;
-import client.exceptions.ServerRequestFailedException;
 import client.exceptions.UnsupportedCommandException;
 import client.exceptions.WrongNumberOfArgumentsException;
+import common.exceptions.NetworkCommunicationFailedException;
 import common.network.requests.FilterStartsWithFullNameRequest;
 import common.network.requests.NetworkRequest;
 import common.network.responses.ErrorResponse;
@@ -28,7 +28,7 @@ public class FilterStartsWithFullNameCommand extends Command {
     }
     
     @Override
-    public void execute() throws ServerRequestFailedException {
+    public void execute() throws NetworkCommunicationFailedException {
         NetworkRequest req = new FilterStartsWithFullNameRequest(fullName);
         NetworkResponse res = runner.getServerConnection().request(req);
 

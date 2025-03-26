@@ -1,9 +1,9 @@
 package client.controller.commands;
 
 import client.controller.Runner;
-import client.exceptions.ServerRequestFailedException;
 import client.exceptions.UnsupportedCommandException;
 import client.exceptions.WrongNumberOfArgumentsException;
+import common.exceptions.NetworkCommunicationFailedException;
 import common.network.requests.NetworkRequest;
 import common.network.requests.ShowRequest;
 import common.network.responses.ErrorResponse;
@@ -23,7 +23,7 @@ public final class ShowCommand extends Command {
     }
 
     @Override
-    public void execute() throws ServerRequestFailedException {
+    public void execute() throws NetworkCommunicationFailedException {
         NetworkRequest req = new ShowRequest();
         NetworkResponse res = runner.getServerConnection().request(req);
 

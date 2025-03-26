@@ -4,12 +4,12 @@ import client.controller.commands.Command;
 import client.controller.commands.CommandParser;
 import client.exceptions.InputDeniedException;
 import client.exceptions.InputFailedException;
-import client.exceptions.ServerRequestFailedException;
 import client.exceptions.UnexpectedEODException;
 import client.network.ServerConnection;
 import client.view.View;
 import client.view.inputrequests.CommandInputRequest;
 import client.view.inputrequests.InputRequestFactory;
+import common.exceptions.NetworkCommunicationFailedException;
 
 public class Runner {
     private State state = State.STOPPED;
@@ -118,7 +118,7 @@ public class Runner {
                 view.error("Не удалось прочитать команду: " + e.getMessage());
 
                 stop();
-            } catch (ServerRequestFailedException e) {
+            } catch (NetworkCommunicationFailedException e) {
                 view.error("Не удалось связаться с сервером: " + e.getMessage());
 
                 stop();

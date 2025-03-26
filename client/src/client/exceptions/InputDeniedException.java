@@ -13,7 +13,7 @@ public class InputDeniedException extends Exception {
     }
 
     /**
-     * @param e Ошибка или исключение, из-за возниконвения которого не удалось распарсить
+     * @param e Ошибка или исключение, из-за возникновения которого не удалось распарсить
      *          данные
      */
     public InputDeniedException(Throwable e) {
