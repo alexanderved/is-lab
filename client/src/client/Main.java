@@ -59,14 +59,16 @@ public class Main {
         cmdParser.register("print_field_descending_annual_turnover",
             new PrintFieldDescendingAnnualTurnoverCommand.Parser());
 
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                conn.close();
+            } catch (IOException e) {
+                System.err.println(e.getMessage());
+            }
+        }));
+
         Runner runner = new Runner(view, conn, cmdParser);
 
         runner.run();
-
-        try {
-            conn.close();
-        } catch (IOException e) {
-
-        }
     }
 }

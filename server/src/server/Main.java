@@ -76,12 +76,20 @@ public class Main {
         reqExecutor.register("print_field_descending_annual_turnover",
             new PrintFieldDescendingAnnualTurnoverRequestExecutor());
 
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                collection.save();
+            } catch (RepositoryAccessDeniedException e) {
+                System.err.println(e.getMessage());
+            }
+
+            try {
+                provider.close();
+            } catch (IOException e) {
+                System.err.println(e.getMessage());
+            }
+        }));
+
         runner.run();
-
-        try {
-            provider.close();
-        } catch (IOException e) {
-
-        }
     }
 }
