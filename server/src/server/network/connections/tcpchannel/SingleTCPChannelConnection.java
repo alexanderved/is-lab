@@ -67,7 +67,7 @@ class SingleTCPChannelConnection extends Connection implements Closeable {
     }
 
     private void handleRequests(Function<NetworkRequest, NetworkResponse> responder)
-            throws IOException, ClassNotFoundException, ClassCastException {
+            throws NetworkCommunicationFailedException, IOException, ClassNotFoundException, ClassCastException {
         while (!bufferedInput.isEmpty()) {
             ByteBuffer serializedRequest = bufferedInput.pollFirst();
             if (serializedRequest.remaining() > 0) {
@@ -78,6 +78,16 @@ class SingleTCPChannelConnection extends Connection implements Closeable {
             serializedRequest.rewind();
 
             NetworkRequest req = (NetworkRequest) CustomDeserializer.deserialize(serializedRequest);
+            if (!req.isValid()) {
+                throw new NetworkCommunicationFailedException("Получены поврежденные данные");
+            }
+
+            try {
+                server.Main.logger.info("Получен запрос от клиента по адресу " + channel.getRemoteAddress());
+            } catch (IOException e) {
+                server.Main.logger.info("Получен запрос от клиента");
+            }
+
             NetworkResponse res = responder.apply(req);
 
             CustomSerializer.serializeTo(byteOutput, res);
@@ -97,6 +107,12 @@ class SingleTCPChannelConnection extends Connection implements Closeable {
 
             if (first.remaining() == 0) {
                 bufferedOutput.pollFirst();
+
+                try {
+                    server.Main.logger.info("Отправлен ответ клиенту по адресу " + channel.getRemoteAddress());
+                } catch (IOException e) {
+                    server.Main.logger.info("Отправлен ответ клиенту");
+                }
             }
         }
     }

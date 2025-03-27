@@ -25,7 +25,6 @@ public class TCPStreamServerConnection extends ServerConnection implements Close
             
             return (NetworkResponse) CustomDeserializer.deserializeFrom(socket.getInputStream());
         } catch (IOException | ClassNotFoundException | ClassCastException e) {
-            e.printStackTrace();
             throw new NetworkCommunicationFailedException(e);
         }
     }

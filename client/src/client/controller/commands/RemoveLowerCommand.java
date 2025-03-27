@@ -20,7 +20,7 @@ import client.utils.OrganizationTemplateCollector;
  */
 public class RemoveLowerCommand extends Command {
     private static final String CMD_NAME = CommandInfo.REMOVE_LOWER.getName();
-    private static final int NB_ARGUMENTS = CommandInfo.REMOVE_LOWER.getArguments().length;
+    private static final int NB_ARGUMENTS = CommandInfo.REMOVE_LOWER.getArguments().length - 1;
 
     private final OrganizationTemplate template;
 

@@ -64,6 +64,8 @@ public class CollectionManager {
             .map(Organization::getId)
             .forEach(idGen::reserve);
 
+        server.Main.logger.info("Коллекция загружена в память");
+
         return collection;
     }
 

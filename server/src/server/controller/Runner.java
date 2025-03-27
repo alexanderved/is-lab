@@ -1,7 +1,10 @@
 package server.controller;
 
+import java.util.logging.Level;
+
 import common.exceptions.NetworkCommunicationFailedException;
 import common.network.responses.ErrorResponse;
+import common.network.responses.NetworkResponse;
 import server.application.CollectionManager;
 import server.controller.executors.RequestExecutor;
 import server.exceptions.UnsupportedRequestException;
@@ -108,12 +111,20 @@ public class Runner {
                 provider.provide()
                         .respond((req) -> {
                             try {
-                                return reqExecutor.execute(req, this);
+                                NetworkResponse res = reqExecutor.execute(req, this);
+                                server.Main.logger.info("Выполнен запрос `" + req.getName() + "`");
+
+                                return res;
                             } catch (UnsupportedRequestException reqException) {
+                                server.Main.logger.warning("В процессе выполнения запроса `" + req.getName()
+                                        + "` произошла ошибка");
+
                                 return new ErrorResponse(reqException.getMessage());
                             }
                         });
             } catch (NetworkCommunicationFailedException e) {
+                server.Main.logger.log(Level.SEVERE, e.toString(), e);
+
                 stop();
             }
         }

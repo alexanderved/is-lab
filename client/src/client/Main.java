@@ -2,7 +2,6 @@ package client;
 
 import java.io.IOException;
 import java.net.InetAddress;
-
 import client.controller.Runner;
 import client.controller.commands.AddCommand;
 import client.controller.commands.AddIfMaxCommand;
@@ -26,13 +25,15 @@ import client.view.View;
 import client.view.cli.Cli;
 
 public class Main {
+    public static final int PORT = 4891;
+
     public static void main(String[] args) {
         View view = new Cli();
         GeneralCommandParser cmdParser = new GeneralCommandParser();
 
         TCPStreamServerConnection conn;
         try {
-            conn = new TCPStreamServerConnection(InetAddress.getLoopbackAddress(), 6789);
+            conn = new TCPStreamServerConnection(InetAddress.getLoopbackAddress(), PORT);
         } catch (IOException e) {
             view.error(e.getMessage());
 

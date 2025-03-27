@@ -28,7 +28,7 @@ public class TCPChannelConnection extends Connection implements Closeable {
                     it.remove();
                     client.close();
                 } catch (IOException io) {
-                    // TODO: Add logging
+                    server.Main.logger.warning("Не удалось закрыть соединение с клиентом");
                 }
             }
         }
@@ -37,11 +37,17 @@ public class TCPChannelConnection extends Connection implements Closeable {
     public void addClient(SocketChannel channel) {
         try {
             clients.add(new SingleTCPChannelConnection(channel));
+
+            try {
+                server.Main.logger.info("Получено подключение от клиента по адресу " + channel.getRemoteAddress());
+            } catch (IOException e) {
+                server.Main.logger.info("Получено подключение от клиента");
+            }
         } catch (IOException e) {
             try {
                 channel.close();
             } catch (IOException io) {
-                // TODO: Add logging
+                server.Main.logger.warning("Не удалось принять подключение от клиента");
             }
         }
     }

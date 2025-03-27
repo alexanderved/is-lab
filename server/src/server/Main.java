@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import server.application.CollectionManager;
 import server.application.IDGenerator;
@@ -28,6 +30,9 @@ import server.network.providers.TCPChannelConnectionProvider;
 import server.repository.xml.XmlRepository;
 
 public class Main {
+    public static final int PORT = 4891;
+    public static final Logger logger = Logger.getGlobal();
+    
     public static void main(String[] args) {
         String repoPath = System.getenv("REPO_PATH");
         if (repoPath == null) {
@@ -37,12 +42,13 @@ public class Main {
             return;
         }
 
-        SocketAddress addr = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6789);
+        SocketAddress addr = new InetSocketAddress(InetAddress.getLoopbackAddress(), PORT);
         TCPChannelConnectionProvider provider;
         try {
             provider = new TCPChannelConnectionProvider(addr);
         } catch (IOException e) {
-            System.err.println(e.getMessage());
+            logger.log(Level.SEVERE, e.toString(), e);
+
             return;
         }
 
@@ -52,7 +58,7 @@ public class Main {
         try {
             collection = new CollectionManager(idGen, repo);
         } catch (RepositoryAccessDeniedException | RepositoryDataCorruptedException e) {
-            System.err.println(e.getMessage());
+            logger.log(Level.SEVERE, e.toString(), e);
 
             return;
         }
@@ -80,13 +86,13 @@ public class Main {
             try {
                 collection.save();
             } catch (RepositoryAccessDeniedException e) {
-                System.err.println(e.getMessage());
+                logger.log(Level.SEVERE, e.toString(), e);
             }
 
             try {
                 provider.close();
             } catch (IOException e) {
-                System.err.println(e.getMessage());
+                logger.log(Level.SEVERE, e.toString(), e);
             }
         }));
 
