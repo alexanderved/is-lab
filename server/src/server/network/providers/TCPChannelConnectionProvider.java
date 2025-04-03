@@ -3,47 +3,144 @@ package server.network.providers;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.SocketAddress;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.logging.Level;
 
 import common.exceptions.NetworkCommunicationFailedException;
-import server.network.connections.Connection;
-import server.network.connections.tcpchannel.TCPChannelConnection;
+import common.exceptions.UnknownDataTypeReceived;
+import server.network.connections.ClientConnection;
+import server.network.connections.TCPChannelClientConnection;
 
 public class TCPChannelConnectionProvider extends ConnectionProvider implements Closeable {
-    private TCPChannelConnection connection = new TCPChannelConnection();
     private ServerSocketChannel serverChannel;
+    private Selector selector;
+    private Set<TCPChannelClientConnection> connections = new HashSet<>(); 
+    private Set<ClientConnection> readyConnections = new HashSet<>();
 
     public TCPChannelConnectionProvider(SocketAddress addr) throws IOException {
         serverChannel = ServerSocketChannel.open();
-        serverChannel.bind(addr);
-        serverChannel.configureBlocking(false);
+
+        try {
+            serverChannel.bind(addr);
+            serverChannel.configureBlocking(false);
+
+            selector = Selector.open();
+            serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+        } catch (IOException e) {
+            serverChannel.close();
+
+            throw e;
+        }
     }
 
     @Override
-    public Connection provide() throws NetworkCommunicationFailedException {
+    public Set<ClientConnection> provide() throws NetworkCommunicationFailedException {
         try {
-            updateConnection();
+            selector.select();
         } catch (IOException e) {
-            throw new NetworkCommunicationFailedException(e);
+            return readyConnections;
         }
 
-        return connection;
+        var it = selector.selectedKeys().iterator();
+        while (it.hasNext()) {
+            SelectionKey key = it.next();
+
+            if (key.isAcceptable()) {
+                acceptClientConnections();
+            } else if (key.isReadable()) {
+                TCPChannelClientConnection c = (TCPChannelClientConnection) key.attachment();
+                readFromClient(c);
+            } else if (key.isWritable()) {
+                TCPChannelClientConnection c = (TCPChannelClientConnection) key.attachment();
+                writeToClient(c);
+            }
+
+            it.remove();
+        }
+
+        for (ClientConnection c : connections) {
+            if (c.hasPendingRequest()) {
+                readyConnections.add(c);
+            }
+        }
+
+        return readyConnections;
     }
 
-    private void updateConnection() throws IOException {
-        SocketChannel channel = null;
-        while ((channel = serverChannel.accept()) != null) {
-            connection.addClient(channel);
+    private void acceptClientConnections() {
+        try {
+            SocketChannel channel = null;
+            while ((channel = serverChannel.accept()) != null) {
+                addClientConnection(channel);
+            }
+        } catch (IOException e) {
+
+        }
+    }
+
+    private void addClientConnection(SocketChannel channel) {
+        try {
+            TCPChannelClientConnection c = new TCPChannelClientConnection(channel);
+            connections.add(c);
+            channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE, c);
+
+            try {
+                server.Main.logger.info("Получено подключение от клиента по адресу " + channel.getRemoteAddress());
+            } catch (IOException e) {
+                server.Main.logger.info("Получено подключение от клиента");
+            }
+        } catch (IOException e) {
+            server.Main.logger.log(Level.WARNING, "Не удалось принять подключение от клиента", e);
+        }
+    }
+
+    private void removeClientConnection(TCPChannelClientConnection c) {
+        connections.remove(c);
+        c.getChannel().keyFor(selector).cancel();
+        try {
+            c.close();
+        } catch (IOException e) {
+
+        }
+
+        server.Main.logger.info("Клиент отключен");
+    }
+
+    private void readFromClient(TCPChannelClientConnection c) {
+        try {
+            c.readRequest();
+        } catch (NetworkCommunicationFailedException | UnknownDataTypeReceived e) {
+            removeClientConnection(c);
+        }
+    }
+
+    private void writeToClient(TCPChannelClientConnection c) {
+        try {
+            c.writeResponse();
+        } catch (NetworkCommunicationFailedException e) {
+            removeClientConnection(c);
         }
     }
 
     @Override
     public void close() throws IOException {
-        try {
-            connection.close();
-        } finally {
-            serverChannel.close();
+        var it = connections.iterator();
+        while (it.hasNext()) {
+            TCPChannelClientConnection c = it.next();
+            try {
+                c.close();
+            } catch (IOException e) {
+
+            } finally {
+                it.remove();
+            }
         }
+
+        serverChannel.close();
     }
 }

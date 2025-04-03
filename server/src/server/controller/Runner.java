@@ -3,11 +3,13 @@ package server.controller;
 import java.util.logging.Level;
 
 import common.exceptions.NetworkCommunicationFailedException;
+import common.network.requests.NetworkRequest;
 import common.network.responses.ErrorResponse;
 import common.network.responses.NetworkResponse;
 import server.application.CollectionManager;
 import server.controller.executors.RequestExecutor;
 import server.exceptions.UnsupportedRequestException;
+import server.network.connections.ClientConnection;
 import server.network.providers.ConnectionProvider;
 
 /**
@@ -108,20 +110,25 @@ public class Runner {
 
         while (getState() == State.RUNNING) {
             try {
-                provider.provide()
-                        .respond((req) -> {
-                            try {
-                                NetworkResponse res = reqExecutor.execute(req, this);
-                                server.Main.logger.info("Выполнен запрос `" + req.getName() + "`");
+                var it = provider.provide().iterator();
+                while (it.hasNext()) {
+                    ClientConnection c = it.next();
 
-                                return res;
-                            } catch (UnsupportedRequestException reqException) {
-                                server.Main.logger.warning("В процессе выполнения запроса `" + req.getName()
-                                        + "` произошла ошибка");
+                    NetworkRequest req = c.pollRequest();
+                    try {
+                        NetworkResponse res = reqExecutor.execute(req, this);
+                        server.Main.logger.info("Выполнен запрос `" + req.getName() + "`");
 
-                                return new ErrorResponse(reqException.getMessage());
-                            }
-                        });
+                        c.offerResponse(res);
+                    } catch (UnsupportedRequestException reqException) {
+                        server.Main.logger.warning("В процессе выполнения запроса `" + req.getName()
+                                + "` произошла ошибка");
+
+                        c.offerResponse(new ErrorResponse(reqException.getMessage()));
+                    }
+
+                    it.remove();
+                }
             } catch (NetworkCommunicationFailedException e) {
                 server.Main.logger.log(Level.SEVERE, e.toString(), e);
 
