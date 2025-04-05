@@ -51,7 +51,15 @@ public class TCPChannelConnectionProvider extends ConnectionProvider implements 
             SelectionKey key = it.next();
 
             if (key.isAcceptable()) {
-                acceptClientConnections();
+                try {
+                    acceptClientConnections();
+                } catch (IOException e) {
+                    if (connections.isEmpty()) {
+                        throw new NetworkCommunicationFailedException(e);
+                    } else {
+                        server.Main.logger.log(Level.SEVERE, "Ошибка подключения: ", e);
+                    }
+                }
             } else if (key.isReadable()) {
                 TCPChannelClientConnection c = (TCPChannelClientConnection) key.attachment();
                 readFromClient(c);
@@ -72,14 +80,10 @@ public class TCPChannelConnectionProvider extends ConnectionProvider implements 
         return readyConnections;
     }
 
-    private void acceptClientConnections() {
-        try {
-            SocketChannel channel = null;
-            while ((channel = serverChannel.accept()) != null) {
-                addClientConnection(channel);
-            }
-        } catch (IOException e) {
-
+    private void acceptClientConnections() throws IOException {
+        SocketChannel channel = null;
+        while ((channel = serverChannel.accept()) != null) {
+            addClientConnection(channel);
         }
     }
 
@@ -101,6 +105,7 @@ public class TCPChannelConnectionProvider extends ConnectionProvider implements 
 
     private void removeClientConnection(TCPChannelClientConnection c) {
         connections.remove(c);
+        readyConnections.remove(c);
         c.getChannel().keyFor(selector).cancel();
         try {
             c.close();

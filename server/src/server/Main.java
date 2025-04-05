@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import server.application.CollectionManager;
 import server.application.IDGenerator;
 import server.application.IncrementalIDGenerator;
+import server.controller.ClientResponder;
 import server.controller.Runner;
 import server.controller.executors.AddIfMaxRequestExecutor;
 import server.controller.executors.AddIfMinRequestExecutor;
@@ -63,8 +64,9 @@ public class Main {
             return;
         }
         GeneralRequestExecutor reqExecutor = new GeneralRequestExecutor();
+        ClientResponder responder = new ClientResponder(provider, reqExecutor);
 
-        Runner runner = new Runner(provider, reqExecutor, collection);
+        Runner runner = new Runner(responder, collection);
 
         reqExecutor.register("info", new InfoRequestExecutor());
         reqExecutor.register("show", new ShowRequestExecutor());
