@@ -4,12 +4,14 @@ import common.exceptions.NetworkCommunicationFailedException;
 import common.exceptions.UnknownDataTypeReceived;
 import common.network.requests.NetworkRequest;
 import common.network.responses.NetworkResponse;
+import server.exceptions.ClientDisconnectedException;
 
 public abstract class ClientConnection {
     private State state = State.READ_READY;
 
-    public abstract void readRequest() throws NetworkCommunicationFailedException, UnknownDataTypeReceived;
-    public abstract void writeResponse() throws NetworkCommunicationFailedException;
+    public abstract void readRequest()
+            throws NetworkCommunicationFailedException, UnknownDataTypeReceived, ClientDisconnectedException;
+    public abstract void writeResponse() throws NetworkCommunicationFailedException, ClientDisconnectedException;
 
     public abstract NetworkRequest pollRequest();
     public abstract void offerResponse(NetworkResponse response);

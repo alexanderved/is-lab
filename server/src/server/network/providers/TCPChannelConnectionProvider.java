@@ -13,6 +13,7 @@ import java.util.logging.Level;
 
 import common.exceptions.NetworkCommunicationFailedException;
 import common.exceptions.UnknownDataTypeReceived;
+import server.exceptions.ClientDisconnectedException;
 import server.network.connections.ClientConnection;
 import server.network.connections.TCPChannelClientConnection;
 
@@ -110,7 +111,7 @@ public class TCPChannelConnectionProvider extends ConnectionProvider implements 
         try {
             c.close();
         } catch (IOException e) {
-
+            server.Main.logger.log(Level.WARNING, "Не удалось закрыть канал связи с клиентом", e);
         }
 
         server.Main.logger.info("Клиент отключен");
@@ -120,6 +121,10 @@ public class TCPChannelConnectionProvider extends ConnectionProvider implements 
         try {
             c.readRequest();
         } catch (NetworkCommunicationFailedException | UnknownDataTypeReceived e) {
+            server.Main.logger.log(Level.WARNING, "Ошибка коммуникации с клиентом", e);
+
+            removeClientConnection(c);
+        } catch (ClientDisconnectedException e) {
             removeClientConnection(c);
         }
     }
@@ -128,6 +133,10 @@ public class TCPChannelConnectionProvider extends ConnectionProvider implements 
         try {
             c.writeResponse();
         } catch (NetworkCommunicationFailedException e) {
+            server.Main.logger.log(Level.WARNING, "Ошибка коммуникации с клиентом", e);
+            
+            removeClientConnection(c);
+        } catch (ClientDisconnectedException e) {
             removeClientConnection(c);
         }
     }

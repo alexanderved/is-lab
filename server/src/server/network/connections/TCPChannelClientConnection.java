@@ -11,6 +11,7 @@ import common.network.requests.NetworkRequest;
 import common.network.responses.NetworkResponse;
 import common.utils.CustomDeserializer;
 import common.utils.CustomSerializer;
+import server.exceptions.ClientDisconnectedException;
 
 public class TCPChannelClientConnection extends ClientConnection implements Closeable {
     private SocketChannel channel;
@@ -34,7 +35,8 @@ public class TCPChannelClientConnection extends ClientConnection implements Clos
     }
 
     @Override
-    public void readRequest() throws NetworkCommunicationFailedException, UnknownDataTypeReceived {
+    public void readRequest()
+            throws NetworkCommunicationFailedException, UnknownDataTypeReceived, ClientDisconnectedException {
         if (!tryStartRead()) {
             return;
         }
@@ -100,9 +102,9 @@ public class TCPChannelClientConnection extends ClientConnection implements Clos
         nextState();
     }
 
-    private boolean tryStartRead() throws NetworkCommunicationFailedException {
+    private boolean tryStartRead() throws ClientDisconnectedException {
         if (isDisconnected()) {
-            throw new NetworkCommunicationFailedException("Соединение с клиентом закрыто");
+            throw new ClientDisconnectedException();
         }
 
         if (getState() != State.READ_READY) {
@@ -120,7 +122,7 @@ public class TCPChannelClientConnection extends ClientConnection implements Clos
     }
 
     @Override
-    public void writeResponse() throws NetworkCommunicationFailedException {
+    public void writeResponse() throws NetworkCommunicationFailedException, ClientDisconnectedException {
         if (!tryStartWrite()) {
             return;
         }
@@ -143,9 +145,9 @@ public class TCPChannelClientConnection extends ClientConnection implements Clos
         nextState();
     }
 
-    private boolean tryStartWrite() throws NetworkCommunicationFailedException {
+    private boolean tryStartWrite() throws ClientDisconnectedException {
         if (isDisconnected()) {
-            throw new NetworkCommunicationFailedException("Соединение с клиентом закрыто");
+            throw new ClientDisconnectedException();
         }
 
         if (getState() != State.WRITE_READY) {
