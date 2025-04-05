@@ -1,30 +1,5 @@
 <collection>
     <organization>
-        <id>5</id>
-        <name>E</name>
-        <coordinates>
-            <x>157.0</x>
-            <y>139</y>
-        </coordinates>
-        <creationDate>2025-03-27T01:32:05.761394258+03:00[Europe/Moscow]</creationDate>
-        <annualTurnover>1984.0</annualTurnover>
-        <fullName>ООО "E"</fullName>
-        <employeesCount>84</employeesCount>
-        <type>PUBLIC</type>
-    </organization>
-    <organization>
-        <id>3</id>
-        <name>C</name>
-        <coordinates>
-            <x>15.0</x>
-            <y>13</y>
-        </coordinates>
-        <creationDate>2025-02-27T01:15:25.648709981+03:00[Europe/Moscow]</creationDate>
-        <annualTurnover>1200.0</annualTurnover>
-        <employeesCount>100</employeesCount>
-        <type>TRUST</type>
-    </organization>
-    <organization>
         <id>2</id>
         <name>B</name>
         <coordinates>
@@ -83,5 +58,30 @@
                 <z>0</z>
             </town>
         </officialAddress>
+    </organization>
+    <organization>
+        <id>5</id>
+        <name>E</name>
+        <coordinates>
+            <x>157.0</x>
+            <y>139</y>
+        </coordinates>
+        <creationDate>2025-03-27T01:32:05.761394258+03:00[Europe/Moscow]</creationDate>
+        <annualTurnover>1984.0</annualTurnover>
+        <fullName>ООО "E"</fullName>
+        <employeesCount>84</employeesCount>
+        <type>PUBLIC</type>
+    </organization>
+    <organization>
+        <id>3</id>
+        <name>C</name>
+        <coordinates>
+            <x>15.0</x>
+            <y>13</y>
+        </coordinates>
+        <creationDate>2025-02-27T01:15:25.648709981+03:00[Europe/Moscow]</creationDate>
+        <annualTurnover>1200.0</annualTurnover>
+        <employeesCount>100</employeesCount>
+        <type>TRUST</type>
     </organization>
 </collection>

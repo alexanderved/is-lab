@@ -2,3 +2,4 @@ build/
 .idea/
 out/
 proglab-sem2.iml
+.gradle
