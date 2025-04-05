@@ -1,17 +1,29 @@
+FROM gradle:jdk17-alpine AS temp_build_image
+
+ENV APP=/usr/src/server
+WORKDIR $APP
+
+COPY ./common common/
+COPY ./server server/
+RUN mkdir client
+
+COPY ./gradle gradle/
+COPY ./build.gradle.kts .
+COPY ./settings.gradle.kts .
+COPY ./gradlew .
+
+RUN ./gradlew :server:build
+
 FROM openjdk:17-oracle
 
-WORKDIR /app
+ENV APP_SRC=/usr/src/server
+ENV APP=/usr/server
+WORKDIR /usr/server
 
-RUN mkdir -p common/
-COPY ./common common/
+COPY --from=temp_build_image $APP_SRC/server/build/libs/server.jar .
 
-RUN mkdir -p server/src
-RUN mkdir -p server/META-INF
-COPY ./server/src server/src
-COPY ./server/META-INF server/META-INF
+ENV REPO_PATH=repo.xml
+RUN echo "<collection></collection>" > $REPO_PATH
 
-RUN ls
-RUN javac -cp "common/src/:server/src/" -d build/server server/src/server/Main.java common/src/common/network/responses/* common/src/common/network/requests/*
-RUN jar cfm build/server.jar server/META-INF/MANIFEST.MF -C build/server .
-
-CMD ["java", "-jar build/server.jar"]
+EXPOSE 4891
+CMD ["java", "-jar", "server.jar"]

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,7 +35,7 @@ public class Main {
     public static final int PORT = 4891;
     public static final Logger logger = Logger.getGlobal();
     
-    public static void main(String[] args) {
+    public static void main(String[] args) throws UnknownHostException {
         String repoPath = System.getenv("REPO_PATH");
         if (repoPath == null) {
             System.err.println("Файл репозитория не найден."
@@ -43,7 +44,7 @@ public class Main {
             return;
         }
 
-        SocketAddress addr = new InetSocketAddress(InetAddress.getLoopbackAddress(), PORT);
+        SocketAddress addr = new InetSocketAddress(InetAddress.getByAddress(new byte[]{0, 0, 0, 0}), PORT);
         TCPChannelConnectionProvider provider;
         try {
             provider = new TCPChannelConnectionProvider(addr);
