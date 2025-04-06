@@ -10,12 +10,6 @@ dependencies {
     implementation(project(":common"))
 }
 
-sourceSets {                                
-    main {                                  
-        java.srcDir("src/server/")
-    }
-}
-
 tasks.jar {
     manifest {
         attributes["Main-Class"] = "server.Main"

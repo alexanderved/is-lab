@@ -10,8 +10,8 @@ RUN mkdir client
 COPY ./gradle gradle/
 COPY ./build.gradle.kts .
 COPY ./settings.gradle.kts .
-COPY ./gradlew .
 
+RUN gradle wrapper
 RUN ./gradlew :server:build
 
 FROM openjdk:17-oracle

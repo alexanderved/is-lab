@@ -3,5 +3,6 @@
         "server/src",
         "common/src",
         "client/src"
-    ]
+    ],
+    "java.configuration.updateBuildConfiguration": "automatic"
 }
