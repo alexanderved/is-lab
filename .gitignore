@@ -1,4 +1,7 @@
 build/
+common/bin/
+client/bin/
+server/bin/
 .idea/
 out/
 proglab-sem2.iml
