@@ -1,0 +1,17 @@
+services:
+  server:
+    build:
+      context: ./
+      dockerfile: server/Dockerfile
+    ports:
+      - 4891:4891
+
+  client:
+    build:
+      context: ./
+      dockerfile: client/Dockerfile
+    network_mode: host
+    stdin_open: true
+    tty: true
+    depends_on:
+      - server
