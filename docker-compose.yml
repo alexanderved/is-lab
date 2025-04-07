@@ -5,6 +5,13 @@ services:
       dockerfile: server/Dockerfile
     ports:
       - 4891:4891
+    healthcheck:
+      test: [ "CMD-SHELL", "netstat -ltn | grep -c \":4891\"" ]
+      interval: 5m
+      retries: 5
+      start_period: 5s
+      start_interval: 1s
+      timeout: 10s
 
   client:
     build:
@@ -14,4 +21,5 @@ services:
     stdin_open: true
     tty: true
     depends_on:
-      - server
+      server:
+        condition: service_healthy

@@ -1,4 +1,4 @@
-FROM gradle:jdk17-alpine AS temp_build_image
+FROM gradle:jdk17-alpine AS builder
 
 ENV APP=/usr/src/client
 WORKDIR $APP
@@ -10,9 +10,10 @@ RUN mkdir server
 COPY ./gradle gradle/
 COPY ./build.gradle.kts .
 COPY ./settings.gradle.kts .
+COPY ./gradlew .
 
-RUN gradle wrapper
 RUN ./gradlew :client:build
+RUN ./gradlew :client:installDist
 
 FROM openjdk:17-oracle
 
@@ -20,7 +21,9 @@ ENV APP_SRC=/usr/src/client
 ENV APP=/usr/client
 WORKDIR /usr/client
 
-COPY --from=temp_build_image $APP_SRC/client/build/libs/client.jar .
+RUN microdnf install findutils
 
-EXPOSE 4891
-CMD ["java", "-jar", "client.jar"]
+COPY --from=builder $APP_SRC/client/build/install/client/bin/ bin/
+COPY --from=builder $APP_SRC/client/build/install/client/lib/ lib/
+
+CMD ["bin/client"]

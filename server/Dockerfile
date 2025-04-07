@@ -1,4 +1,4 @@
-FROM gradle:jdk17-alpine AS temp_build_image
+FROM gradle:jdk17-alpine AS builder
 
 ENV APP=/usr/src/server
 WORKDIR $APP
@@ -10,9 +10,10 @@ RUN mkdir client
 COPY ./gradle gradle/
 COPY ./build.gradle.kts .
 COPY ./settings.gradle.kts .
+COPY ./gradlew .
 
-RUN gradle wrapper
 RUN ./gradlew :server:build
+RUN ./gradlew :server:installDist
 
 FROM openjdk:17-oracle
 
@@ -20,10 +21,14 @@ ENV APP_SRC=/usr/src/server
 ENV APP=/usr/server
 WORKDIR /usr/server
 
-COPY --from=temp_build_image $APP_SRC/server/build/libs/server.jar .
+RUN microdnf install findutils
+RUN microdnf install net-tools
+
+COPY --from=builder $APP_SRC/server/build/install/server/bin/ bin/
+COPY --from=builder $APP_SRC/server/build/install/server/lib/ lib/
 
 ENV REPO_PATH=repo.xml
 RUN echo "<collection></collection>" > $REPO_PATH
 
 EXPOSE 4891
-CMD ["java", "-jar", "server.jar"]
+CMD ["bin/server"]
