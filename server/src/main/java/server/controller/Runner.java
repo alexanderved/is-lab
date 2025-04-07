@@ -4,6 +4,7 @@ import java.util.logging.Level;
 
 import common.exceptions.NetworkCommunicationFailedException;
 import server.application.CollectionManager;
+import server.logger.Logger;
 
 /**
  * Обработчик запросов к серверу.
@@ -45,7 +46,7 @@ public class Runner {
             try {
                 responder.respond(this);
             } catch (NetworkCommunicationFailedException e) {
-                server.Main.logger.log(Level.SEVERE, e.toString(), e);
+                Logger.getGlobal().error(e.toString(), e);
 
                 stop();
             }

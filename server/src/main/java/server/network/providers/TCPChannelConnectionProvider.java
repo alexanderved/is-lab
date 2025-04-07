@@ -14,6 +14,7 @@ import java.util.logging.Level;
 import common.exceptions.NetworkCommunicationFailedException;
 import common.exceptions.UnknownDataTypeReceived;
 import server.exceptions.ClientDisconnectedException;
+import server.logger.Logger;
 import server.network.connections.ClientConnection;
 import server.network.connections.TCPChannelClientConnection;
 
@@ -58,7 +59,7 @@ public class TCPChannelConnectionProvider extends ConnectionProvider implements 
                     if (connections.isEmpty()) {
                         throw new NetworkCommunicationFailedException(e);
                     } else {
-                        server.Main.logger.log(Level.SEVERE, "Ошибка подключения: ", e);
+                        Logger.getGlobal().error("Ошибка подключения: ", e);
                     }
                 }
             } else if (key.isReadable()) {
@@ -95,12 +96,12 @@ public class TCPChannelConnectionProvider extends ConnectionProvider implements 
             channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE, c);
 
             try {
-                server.Main.logger.info("Получено подключение от клиента по адресу " + channel.getRemoteAddress());
+                Logger.getGlobal().info("Получено подключение от клиента по адресу " + channel.getRemoteAddress());
             } catch (IOException e) {
-                server.Main.logger.info("Получено подключение от клиента");
+                Logger.getGlobal().info("Получено подключение от клиента");
             }
         } catch (IOException e) {
-            server.Main.logger.log(Level.WARNING, "Не удалось принять подключение от клиента", e);
+            Logger.getGlobal().warn("Не удалось принять подключение от клиента", e);
         }
     }
 
@@ -111,17 +112,17 @@ public class TCPChannelConnectionProvider extends ConnectionProvider implements 
         try {
             c.close();
         } catch (IOException e) {
-            server.Main.logger.log(Level.WARNING, "Не удалось закрыть канал связи с клиентом", e);
+            Logger.getGlobal().warn("Не удалось закрыть канал связи с клиентом", e);
         }
 
-        server.Main.logger.info("Клиент отключен");
+        Logger.getGlobal().info("Клиент отключен");
     }
 
     private void readFromClient(TCPChannelClientConnection c) {
         try {
             c.readRequest();
         } catch (NetworkCommunicationFailedException | UnknownDataTypeReceived e) {
-            server.Main.logger.log(Level.WARNING, "Ошибка коммуникации с клиентом", e);
+            Logger.getGlobal().warn("Ошибка коммуникации с клиентом", e);
 
             removeClientConnection(c);
         } catch (ClientDisconnectedException e) {
@@ -133,7 +134,7 @@ public class TCPChannelConnectionProvider extends ConnectionProvider implements 
         try {
             c.writeResponse();
         } catch (NetworkCommunicationFailedException e) {
-            server.Main.logger.log(Level.WARNING, "Ошибка коммуникации с клиентом", e);
+            Logger.getGlobal().warn("Ошибка коммуникации с клиентом", e);
             
             removeClientConnection(c);
         } catch (ClientDisconnectedException e) {

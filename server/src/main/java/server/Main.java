@@ -6,8 +6,6 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import server.application.CollectionManager;
 import server.application.IDGenerator;
 import server.application.IncrementalIDGenerator;
@@ -28,12 +26,12 @@ import server.controller.executors.ShowRequestExecutor;
 import server.controller.executors.UpdateRequestExecutor;
 import server.exceptions.RepositoryAccessDeniedException;
 import server.exceptions.RepositoryDataCorruptedException;
+import server.logger.Logger;
 import server.network.providers.TCPChannelConnectionProvider;
 import server.repository.xml.XmlRepository;
 
 public class Main {
     public static final int PORT = 4891;
-    public static final Logger logger = Logger.getGlobal();
     
     public static void main(String[] args) throws UnknownHostException {
         String repoPath = System.getenv("REPO_PATH");
@@ -49,7 +47,7 @@ public class Main {
         try {
             provider = new TCPChannelConnectionProvider(addr);
         } catch (IOException e) {
-            logger.log(Level.SEVERE, e.toString(), e);
+            Logger.getGlobal().error(e.toString(), e);
 
             return;
         }
@@ -60,7 +58,7 @@ public class Main {
         try {
             collection = new CollectionManager(idGen, repo);
         } catch (RepositoryAccessDeniedException | RepositoryDataCorruptedException e) {
-            logger.log(Level.SEVERE, e.toString(), e);
+            Logger.getGlobal().error(e.toString(), e);
 
             return;
         }
@@ -89,13 +87,13 @@ public class Main {
             try {
                 collection.save();
             } catch (RepositoryAccessDeniedException e) {
-                logger.log(Level.SEVERE, e.toString(), e);
+                Logger.getGlobal().error(e.toString(), e);
             }
 
             try {
                 provider.close();
             } catch (IOException e) {
-                logger.log(Level.SEVERE, e.toString(), e);
+                Logger.getGlobal().error(e.toString(), e);
             }
         }));
 

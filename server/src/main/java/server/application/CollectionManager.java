@@ -9,6 +9,7 @@ import common.domain.Organization;
 import common.domain.OrganizationTemplate;
 import server.exceptions.RepositoryAccessDeniedException;
 import server.exceptions.RepositoryDataCorruptedException;
+import server.logger.Logger;
 import server.repository.Repository;
 import common.utils.validators.OrganizationCollectionValidator;
 
@@ -64,7 +65,7 @@ public class CollectionManager {
             .map(Organization::getId)
             .forEach(idGen::reserve);
 
-        server.Main.logger.info("Коллекция загружена в память");
+        Logger.getGlobal().info("Коллекция загружена в память");
 
         return collection;
     }

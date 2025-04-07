@@ -9,6 +9,7 @@ import java.util.HashSet;
 import common.domain.Organization;
 import server.exceptions.RepositoryAccessDeniedException;
 import server.exceptions.RepositoryDataCorruptedException;
+import server.logger.Logger;
 import server.repository.Repository;
 
 /**
@@ -30,7 +31,7 @@ public class XmlRepository extends Repository {
     {
         try (BufferedReader reader = new BufferedReader(new FileReader(filepath))) {
             HashSet<Organization> orgs = XmlDeserializer.deserializeOrganizationCollection(reader);
-            server.Main.logger.info("Коллекция прочитана из репозитория");
+            Logger.getGlobal().info("Коллекция прочитана из репозитория");
 
             return orgs;
         } catch (IOException e) {
@@ -45,7 +46,7 @@ public class XmlRepository extends Repository {
         try (PrintWriter writer = new PrintWriter(filepath);) {
             XmlSerializer.serializeOrganizationCollection(collection, writer);
 
-            server.Main.logger.info("Коллекция сохранена в репозиторий");
+            Logger.getGlobal().info("Коллекция сохранена в репозиторий");
         } catch (IOException e) {
             throw new RepositoryAccessDeniedException(e);
         }

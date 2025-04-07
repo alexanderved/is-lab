@@ -12,6 +12,7 @@ import common.network.responses.NetworkResponse;
 import common.utils.CustomDeserializer;
 import common.utils.CustomSerializer;
 import server.exceptions.ClientDisconnectedException;
+import server.logger.Logger;
 
 public class TCPChannelClientConnection extends ClientConnection implements Closeable {
     private SocketChannel channel;
@@ -100,6 +101,12 @@ public class TCPChannelClientConnection extends ClientConnection implements Clos
 
         bufferedInput = null;
         nextState();
+
+        try {
+            Logger.getGlobal().info("Получен запрос от клиента по адресу " + channel.getRemoteAddress());
+        } catch (IOException e) {
+            Logger.getGlobal().info("Получен запрос от клиента");
+        }
     }
 
     private boolean tryStartRead() throws ClientDisconnectedException {
@@ -143,6 +150,12 @@ public class TCPChannelClientConnection extends ClientConnection implements Clos
 
         bufferedOutput = null;
         nextState();
+
+        try {
+            Logger.getGlobal().info("Отправлен ответ клиенту по адресу " + channel.getRemoteAddress());
+        } catch (IOException e) {
+            Logger.getGlobal().info("Отправлен ответ клиенту");
+        }
     }
 
     private boolean tryStartWrite() throws ClientDisconnectedException {

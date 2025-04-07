@@ -6,6 +6,7 @@ import common.network.responses.ErrorResponse;
 import common.network.responses.NetworkResponse;
 import server.controller.executors.RequestExecutor;
 import server.exceptions.UnsupportedRequestException;
+import server.logger.Logger;
 import server.network.connections.ClientConnection;
 import server.network.providers.ConnectionProvider;
 
@@ -35,11 +36,11 @@ public class ClientResponder {
             NetworkRequest req = c.pollRequest();
             try {
                 NetworkResponse res = reqExecutor.execute(req, runner);
-                server.Main.logger.info("Выполнен запрос `" + req.getName() + "`");
+                Logger.getGlobal().info("Выполнен запрос `" + req.getName() + "`");
 
                 c.offerResponse(res);
             } catch (UnsupportedRequestException reqException) {
-                server.Main.logger.warning("В процессе выполнения запроса `" + req.getName()
+                Logger.getGlobal().warn("В процессе выполнения запроса `" + req.getName()
                         + "` произошла ошибка");
 
                 c.offerResponse(new ErrorResponse(reqException.getMessage()));
