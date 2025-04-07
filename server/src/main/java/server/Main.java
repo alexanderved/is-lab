@@ -5,7 +5,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
-import java.util.logging.Level;
+
 import server.application.CollectionManager;
 import server.application.IDGenerator;
 import server.application.IncrementalIDGenerator;

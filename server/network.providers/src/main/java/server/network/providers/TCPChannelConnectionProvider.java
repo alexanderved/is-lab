@@ -9,7 +9,6 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
 
 import common.exceptions.NetworkCommunicationFailedException;
 import common.exceptions.UnknownDataTypeReceived;

@@ -8,7 +8,6 @@ COPY ./server server/
 RUN mkdir client
 
 COPY ./gradle gradle/
-COPY ./build.gradle.kts .
 COPY ./settings.gradle.kts .
 COPY ./gradlew .
 

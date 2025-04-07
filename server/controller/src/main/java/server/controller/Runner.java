@@ -1,7 +1,5 @@
 package server.controller;
 
-import java.util.logging.Level;
-
 import common.exceptions.NetworkCommunicationFailedException;
 import server.application.CollectionManager;
 import server.logger.Logger;
