@@ -35,12 +35,13 @@ public class TCPChannelServerSideEndpoint extends Endpoint {
     /**
      * @return используемый TCP-канал
      */
-    public SocketChannel getChannel() {
+    public synchronized SocketChannel getChannel() {
         return channel;
     }
 
     @Override
-    public void read(ByteBuffer buffer) throws NetworkCommunicationFailedException, EndpointDisconnectedException {
+    public synchronized void read(ByteBuffer buffer)
+            throws NetworkCommunicationFailedException, EndpointDisconnectedException {
         if (!channel.isOpen()) {
             throw new EndpointDisconnectedException();
         }
@@ -55,7 +56,8 @@ public class TCPChannelServerSideEndpoint extends Endpoint {
     }
 
     @Override
-    public void write(ByteBuffer buffer) throws NetworkCommunicationFailedException, EndpointDisconnectedException {
+    public synchronized void write(ByteBuffer buffer)
+            throws NetworkCommunicationFailedException, EndpointDisconnectedException {
         if (!channel.isOpen()) {
             throw new EndpointDisconnectedException();
         }
@@ -68,7 +70,8 @@ public class TCPChannelServerSideEndpoint extends Endpoint {
     }
 
     @Override
-    public InputStream getInputStream() throws NetworkCommunicationFailedException, EndpointDisconnectedException {
+    public synchronized InputStream getInputStream()
+            throws NetworkCommunicationFailedException, EndpointDisconnectedException {
         if (!channel.isOpen()) {
             throw new EndpointDisconnectedException();
         }
@@ -81,7 +84,8 @@ public class TCPChannelServerSideEndpoint extends Endpoint {
     }
 
     @Override
-    public OutputStream getOutputStream() throws NetworkCommunicationFailedException, EndpointDisconnectedException {
+    public synchronized OutputStream getOutputStream()
+            throws NetworkCommunicationFailedException, EndpointDisconnectedException {
         if (!channel.isOpen()) {
             throw new EndpointDisconnectedException();
         }
@@ -94,7 +98,8 @@ public class TCPChannelServerSideEndpoint extends Endpoint {
     }
 
     @Override
-    public SocketAddress getRemoteAddress() throws NetworkCommunicationFailedException {
+    public synchronized SocketAddress getRemoteAddress()
+            throws NetworkCommunicationFailedException {
         try {
             return channel.getRemoteAddress();
         } catch (IOException e) {

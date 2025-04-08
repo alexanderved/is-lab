@@ -13,7 +13,7 @@ public class HasPendingRequestState extends ConnectionState {
     }
 
     @Override
-    public NetworkRequest pollRequest() {
+    public synchronized NetworkRequest pollRequest() {
         getClientConnection().setState(new WaitingResponseState(getClientConnection()));
 
         return pendingRequest;

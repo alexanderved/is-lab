@@ -27,7 +27,7 @@ public abstract class ConnectionState {
      * @throws UnknownDataTypeReceived             если получены данные неизвестного типа
      * @throws EndpointDisconnectedException       если соединение разорвано
      */
-    public void readRequest()
+    public synchronized void readRequest()
             throws NetworkCommunicationFailedException, UnknownDataTypeReceived, EndpointDisconnectedException {
         
     }
@@ -38,14 +38,15 @@ public abstract class ConnectionState {
      * @throws NetworkCommunicationFailedException если возникла ошибка сети
      * @throws EndpointDisconnectedException       если соединение разорвано
      */
-    public void writeResponse() throws NetworkCommunicationFailedException, EndpointDisconnectedException {
-
+    public synchronized void writeResponse()
+            throws NetworkCommunicationFailedException, EndpointDisconnectedException {
+        
     }
 
     /**
      * @return запрос от клиента
      */
-    public NetworkRequest pollRequest() {
+    public synchronized NetworkRequest pollRequest() {
         throw new IllegalStateException("Для выполнения данного метода соединение "
                 + "должно находиться в другом состоянии");
     }
@@ -55,7 +56,7 @@ public abstract class ConnectionState {
      *
      * @param response Ответ клиенту
      */
-    public void offerResponse(NetworkResponse response) {
+    public synchronized void offerResponse(NetworkResponse response) {
         throw new IllegalStateException("Для выполнения данного метода соединение "
                 + "должно находиться в другом состоянии");
     }
@@ -63,7 +64,7 @@ public abstract class ConnectionState {
     /**
      * @return соединение с клиентом
      */
-    public ClientConnection getClientConnection() {
+    public synchronized ClientConnection getClientConnection() {
         return connection;
     }
 }

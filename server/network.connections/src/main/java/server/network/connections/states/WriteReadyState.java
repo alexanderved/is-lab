@@ -17,7 +17,7 @@ public class WriteReadyState extends ConnectionState {
     }
 
     @Override
-    public void writeResponse() throws NetworkCommunicationFailedException {
+    public synchronized void writeResponse() throws NetworkCommunicationFailedException {
         getClientConnection().setState(new WorkingState(getClientConnection()));
 
         try {

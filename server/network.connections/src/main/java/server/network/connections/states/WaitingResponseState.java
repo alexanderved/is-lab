@@ -13,7 +13,7 @@ public class WaitingResponseState extends ConnectionState {
     }
 
     @Override
-    public void offerResponse(NetworkResponse response) {
+    public synchronized void offerResponse(NetworkResponse response) {
         try {
             ByteBuffer bufferedOutput = CustomSerializer.serialize(response);
 

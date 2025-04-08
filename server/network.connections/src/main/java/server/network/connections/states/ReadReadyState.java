@@ -19,7 +19,7 @@ public class ReadReadyState extends ConnectionState {
     }
 
     @Override
-    public void readRequest()
+    public synchronized void readRequest()
             throws NetworkCommunicationFailedException, UnknownDataTypeReceived {
         getClientConnection().setState(new WorkingState(getClientConnection()));
 
@@ -55,7 +55,7 @@ public class ReadReadyState extends ConnectionState {
         }
     }
 
-    private boolean readLength() throws NetworkCommunicationFailedException {
+    private synchronized boolean readLength() throws NetworkCommunicationFailedException {
         if (bufferedInput.capacity() == Integer.BYTES) {
             try {
                 getClientConnection().getEndpoint().read(bufferedInput);
@@ -85,7 +85,7 @@ public class ReadReadyState extends ConnectionState {
         return true;
     }
 
-    private boolean readData() throws NetworkCommunicationFailedException {
+    private synchronized boolean readData() throws NetworkCommunicationFailedException {
         try {
             getClientConnection().getEndpoint().read(bufferedInput);
         } catch (NetworkCommunicationFailedException e) {

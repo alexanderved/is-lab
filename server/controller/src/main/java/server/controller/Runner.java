@@ -9,8 +9,8 @@ import server.logger.Logger;
  */
 public class Runner {
     private State state = State.STOPPED;
-    private ClientResponder responder;
-    private CollectionManager collectionManager;
+    private final ClientResponder responder;
+    private final CollectionManager collectionManager;
 
     public Runner(ClientResponder responder, CollectionManager collectionManager) {
         if (responder == null) {

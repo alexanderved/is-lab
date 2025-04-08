@@ -14,8 +14,8 @@ import server.network.providers.ConnectionProvider;
  * Класс, выступающий посредником между соединениями с клиентами и исполнителями запросов.
  */
 public class ClientResponder {
-    private ConnectionProvider provider;
-    private RequestExecutor reqExecutor;
+    private final ConnectionProvider provider;
+    private final RequestExecutor reqExecutor;
 
     /**
      * @param provider Провайдер соединений с клиентами

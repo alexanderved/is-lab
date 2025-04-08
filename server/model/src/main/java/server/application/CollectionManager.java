@@ -16,11 +16,12 @@ import common.utils.validators.OrganizationCollectionValidator;
 /**
  * Класс, оперирующий коллекцией организаций.
  */
+// TODO: Replace `synchronized` with another method from the task
 public class CollectionManager {
-    private HashSet<Organization> collection;
-    private IDGenerator idGen;
-    private Repository repo;
-    private ZonedDateTime initDate;
+    private final HashSet<Organization> collection;
+    private final IDGenerator idGen;
+    private final Repository repo;
+    private final ZonedDateTime initDate;
     private ZonedDateTime lastModDate;
 
     /**
@@ -73,39 +74,39 @@ public class CollectionManager {
     /**
      * @return размер управляемой коллекции
      */
-    public int getCollectionSize() {
+    public synchronized int getCollectionSize() {
         return collection.size();
     }
 
     /**
      * @return времяя инициализации управляемой коллекции
      */
-    public ZonedDateTime getInitDate() {
+    public synchronized ZonedDateTime getInitDate() {
         return initDate;
     }
 
     /**
      * @return время модификации управляемой коллекции
      */
-    public ZonedDateTime getLastModDate() {
+    public synchronized ZonedDateTime getLastModDate() {
         return lastModDate;
     }
 
-    private void updateLastModDate() {
+    private synchronized void updateLastModDate() {
         lastModDate = ZonedDateTime.now();
     }
 
     /**
      * @return тип управляемой коллекции
      */
-    public String getCollectionType() {
+    public synchronized String getCollectionType() {
         return collection.getClass().getName();
     }
 
     /**
      * @return коллекцию, элементы которой отсортированы по имени
      */
-    public List<Organization> getSortedCollection() {
+    public synchronized List<Organization> getSortedCollection() {
         return collection.stream()
                 .sorted((a, b) -> a.getName().compareTo(b.getName()))
                 .toList();
@@ -118,7 +119,7 @@ public class CollectionManager {
      * @return ID новой организации
      * @see OrganizationTemplate
      */
-    public int add(OrganizationTemplate template) {
+    public synchronized int add(OrganizationTemplate template) {
         updateLastModDate();
 
         int newId = idGen.generateID();
@@ -132,7 +133,7 @@ public class CollectionManager {
      * @param id ID организации, которую нужно удалить
      * @return {@code true}, если элемент с данным ID присутствовал в коллекции
      */
-    public boolean removeById(int id) {
+    public synchronized boolean removeById(int id) {
         if (collection.removeIf((org) -> org.getId() == id)) {
             updateLastModDate();
 
@@ -149,7 +150,7 @@ public class CollectionManager {
      *                 сравнение элементов коллекции
      * @see OrganizationTemplate
      */
-    public void removeLower(OrganizationTemplate template) {
+    public synchronized void removeLower(OrganizationTemplate template) {
         if (collection.removeIf((org) -> template.compareTo(org) > 0)) {
             updateLastModDate();
         }
@@ -161,7 +162,7 @@ public class CollectionManager {
      * @param template Шаблон новых данных организации
      * @return {@code true}, если элемент с данным ID присутствует в коллекции
      */
-    public boolean update(int id, OrganizationTemplate template) {
+    public synchronized boolean update(int id, OrganizationTemplate template) {
         Optional<Organization> org = collection.stream()
             .filter((o) -> o.getId() == id)
             .findFirst();
@@ -178,7 +179,7 @@ public class CollectionManager {
     /**
      * Очищает коллекцию.
      */
-    public void clear() {
+    public synchronized void clear() {
         updateLastModDate();
 
         collection.clear();
@@ -189,7 +190,7 @@ public class CollectionManager {
      * @throws RepositoryAccessDeniedException если не удается получить
      *                                         доступ к репозиторию
      */
-    public void save() throws RepositoryAccessDeniedException {
+    public synchronized void save() throws RepositoryAccessDeniedException {
         repo.save(collection);
     }
 
@@ -197,7 +198,7 @@ public class CollectionManager {
      * @return наибольший элемент коллекции
      * @see Organization
      */
-    public Organization max() {
+    public synchronized Organization max() {
         return collection.stream()
             .max(Organization::compareTo)
             .orElse(null);
@@ -207,7 +208,7 @@ public class CollectionManager {
      * @return наименьший элемент коллекции
      * @see Organization
      */
-    public Organization min() {
+    public synchronized Organization min() {
         return collection.stream()
             .min(Organization::compareTo)
             .orElse(null);
@@ -216,7 +217,7 @@ public class CollectionManager {
     /**
      * @return среднее арифметическое количеств сотрудников каждой из организаций
      */
-    public int averageOfEmployeesCount() {
+    public synchronized int averageOfEmployeesCount() {
         int nbOrgs = getCollectionSize();
         if (nbOrgs == 0) {
             return 0;
@@ -230,7 +231,7 @@ public class CollectionManager {
     /**
      * @return список годовых оборотов всех организаций
      */
-    public List<Float> getAnnualTurnovers() {
+    public synchronized List<Float> getAnnualTurnovers() {
         return collection.stream()
             .map((org) -> org.getAnnualTurnover())
             .filter((annualTurnover) -> annualTurnover != null)

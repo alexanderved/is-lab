@@ -36,7 +36,7 @@ public class ClientConnection implements Closeable {
      * @throws UnknownDataTypeReceived             если получены данные неизвестного типа
      * @throws EndpointDisconnectedException       если соединение разорвано
      */
-    public void readRequest()
+    public synchronized void readRequest()
             throws NetworkCommunicationFailedException, UnknownDataTypeReceived, EndpointDisconnectedException {
         state.readRequest();
     }
@@ -47,14 +47,14 @@ public class ClientConnection implements Closeable {
      * @throws NetworkCommunicationFailedException если возникла ошибка сети
      * @throws EndpointDisconnectedException       если соединение разорвано
      */
-    public void writeResponse() throws NetworkCommunicationFailedException, EndpointDisconnectedException {
+    public synchronized void writeResponse() throws NetworkCommunicationFailedException, EndpointDisconnectedException {
         state.writeResponse();
     }
 
     /**
      * @return запрос от клиента
      */
-    public NetworkRequest pollRequest() {
+    public synchronized NetworkRequest pollRequest() {
         return state.pollRequest();
     }
 
@@ -63,35 +63,35 @@ public class ClientConnection implements Closeable {
      *
      * @param response Ответ клиенту
      */
-    public void offerResponse(NetworkResponse response) {
+    public synchronized void offerResponse(NetworkResponse response) {
         state.offerResponse(response);
     }
 
     /**
      * @return {@code true}, если соединение разорвано
      */
-    public boolean isDisconnected() {
+    public synchronized boolean isDisconnected() {
         return getState() instanceof DisconnectedState;
     }
 
     /**
      * @return {@code true}, если присутствует необработанный запрос от клиента
      */
-    public boolean hasPendingRequest() {
+    public synchronized boolean hasPendingRequest() {
         return getState() instanceof HasPendingRequestState;
     }
 
     /**
      * @return конечную точку на стороне сервера
      */
-    public Endpoint getEndpoint() {
+    public synchronized Endpoint getEndpoint() {
         return endpoint;
     }
 
     /**
      * @return текущее состояние соединения.
      */
-    public ConnectionState getState() {
+    public synchronized ConnectionState getState() {
         return state;
     }
 
@@ -100,14 +100,14 @@ public class ClientConnection implements Closeable {
      *
      * @param state Новое состояние
      */
-    public void setState(ConnectionState state) {
+    public synchronized void setState(ConnectionState state) {
         this.state = state;
     }
 
     /**
      * Разрывает соединение с клиентом.
      */
-    public void disconnect() {
+    public synchronized void disconnect() {
         setState(new DisconnectedState(this));
     }
 
