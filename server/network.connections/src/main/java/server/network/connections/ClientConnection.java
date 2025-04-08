@@ -1,81 +1,71 @@
 package server.network.connections;
 
+import common.exceptions.EndpointDisconnectedException;
 import common.exceptions.NetworkCommunicationFailedException;
 import common.exceptions.UnknownDataTypeReceived;
+import common.network.Endpoint;
 import common.network.requests.NetworkRequest;
 import common.network.responses.NetworkResponse;
-import server.exceptions.ClientDisconnectedException;
+import server.network.connections.states.ConnectionState;
+import server.network.connections.states.DisconnectedState;
+import server.network.connections.states.HasPendingRequestState;
+import server.network.connections.states.ReadReadyState;
 
-public abstract class ClientConnection {
-    private State state = State.READ_READY;
+import java.io.Closeable;
+import java.io.IOException;
 
-    public abstract void readRequest()
-            throws NetworkCommunicationFailedException, UnknownDataTypeReceived, ClientDisconnectedException;
-    public abstract void writeResponse() throws NetworkCommunicationFailedException, ClientDisconnectedException;
+public class ClientConnection implements Closeable {
+    private final Endpoint endpoint;
+    private ConnectionState state;
 
-    public abstract NetworkRequest pollRequest();
-    public abstract void offerResponse(NetworkResponse response);
+    public ClientConnection(Endpoint endpoint) {
+        this.endpoint = endpoint;
+        state = new ReadReadyState(this);
+    }
+
+    public void readRequest()
+            throws NetworkCommunicationFailedException, UnknownDataTypeReceived, EndpointDisconnectedException {
+        state.readRequest();
+    }
+
+    public void writeResponse() throws NetworkCommunicationFailedException, EndpointDisconnectedException {
+        state.writeResponse();
+    }
+
+    public NetworkRequest pollRequest() {
+        return state.pollRequest();
+    }
+
+    public void offerResponse(NetworkResponse response) {
+        state.offerResponse(response);
+    }
 
     public boolean isDisconnected() {
-        return getState() == State.DISCONNECTED;
+        return getState() instanceof DisconnectedState;
     }
 
     public boolean hasPendingRequest() {
-        return getState() == State.HAS_PENDING_REQUEST;
+        return getState() instanceof HasPendingRequestState;
     }
 
-    protected State getState() {
+    public Endpoint getEndpoint() {
+        return endpoint;
+    }
+
+    public ConnectionState getState() {
         return state;
     }
 
-    protected void setState(State state) {
+    public void setState(ConnectionState state) {
         this.state = state;
     }
 
-    protected void disconnect() {
-        setState(State.DISCONNECTED);
+    public void disconnect() {
+        setState(new DisconnectedState(this));
     }
 
-    protected void nextState() {
-        setState(switch (state) {
-            case DISCONNECTED -> State.DISCONNECTED;
-            case READ_READY -> State.READING;
-            case READING -> State.HAS_PENDING_REQUEST;
-            case HAS_PENDING_REQUEST -> State.WAITING_RESPONSE;
-            case WAITING_RESPONSE -> State.WRITE_READY;
-            case WRITE_READY -> State.WRITING;
-            case WRITING -> State.READ_READY;
-        });
-    }
-
-    protected void previousState() {
-        setState(switch (state) {
-            case DISCONNECTED -> State.DISCONNECTED;
-            case READ_READY -> State.WRITING;
-            case READING -> State.READ_READY;
-            case HAS_PENDING_REQUEST -> State.READING;
-            case WAITING_RESPONSE -> State.HAS_PENDING_REQUEST;
-            case WRITE_READY -> State.READING;
-            case WRITING -> State.WRITE_READY;
-        });
-    }
-
-    protected void checkState(State expectedState) {
-        if (getState() != expectedState) {
-            disconnect();
-
-            throw new IllegalStateException("Для выполнения данного метода соединение "
-                    + "должно находиться в состоянии " + expectedState);
-        }
-    }
-
-    protected enum State {
-        DISCONNECTED,
-        READ_READY,
-        READING,
-        HAS_PENDING_REQUEST,
-        WAITING_RESPONSE,
-        WRITE_READY,
-        WRITING
+    @Override
+    public void close() throws IOException {
+        endpoint.close();
     }
 }

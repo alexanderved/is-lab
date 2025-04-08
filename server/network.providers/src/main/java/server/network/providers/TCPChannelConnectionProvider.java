@@ -10,17 +10,17 @@ import java.nio.channels.SocketChannel;
 import java.util.HashSet;
 import java.util.Set;
 
+import common.exceptions.EndpointDisconnectedException;
 import common.exceptions.NetworkCommunicationFailedException;
 import common.exceptions.UnknownDataTypeReceived;
-import server.exceptions.ClientDisconnectedException;
 import server.logger.Logger;
 import server.network.connections.ClientConnection;
-import server.network.connections.TCPChannelClientConnection;
+import server.network.connections.TCPChannelServerSideEndpoint;
 
 public class TCPChannelConnectionProvider extends ConnectionProvider implements Closeable {
     private ServerSocketChannel serverChannel;
     private Selector selector;
-    private Set<TCPChannelClientConnection> connections = new HashSet<>(); 
+    private Set<ClientConnection> connections = new HashSet<>();
     private Set<ClientConnection> readyConnections = new HashSet<>();
 
     public TCPChannelConnectionProvider(SocketAddress addr) throws IOException {
@@ -62,10 +62,10 @@ public class TCPChannelConnectionProvider extends ConnectionProvider implements 
                     }
                 }
             } else if (key.isReadable()) {
-                TCPChannelClientConnection c = (TCPChannelClientConnection) key.attachment();
+                ClientConnection c = (ClientConnection) key.attachment();
                 readFromClient(c);
             } else if (key.isWritable()) {
-                TCPChannelClientConnection c = (TCPChannelClientConnection) key.attachment();
+                ClientConnection c = (ClientConnection) key.attachment();
                 writeToClient(c);
             }
 
@@ -90,7 +90,7 @@ public class TCPChannelConnectionProvider extends ConnectionProvider implements 
 
     private void addClientConnection(SocketChannel channel) {
         try {
-            TCPChannelClientConnection c = new TCPChannelClientConnection(channel);
+            ClientConnection c = new ClientConnection(new TCPChannelServerSideEndpoint(channel));
             connections.add(c);
             channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE, c);
 
@@ -104,10 +104,12 @@ public class TCPChannelConnectionProvider extends ConnectionProvider implements 
         }
     }
 
-    private void removeClientConnection(TCPChannelClientConnection c) {
+    private void removeClientConnection(ClientConnection c) {
         connections.remove(c);
         readyConnections.remove(c);
-        c.getChannel().keyFor(selector).cancel();
+
+        SocketChannel channel = ((TCPChannelServerSideEndpoint) c.getEndpoint()).getChannel();
+        channel.keyFor(selector).cancel();
         try {
             c.close();
         } catch (IOException e) {
@@ -117,26 +119,26 @@ public class TCPChannelConnectionProvider extends ConnectionProvider implements 
         Logger.getGlobal().info("Клиент отключен");
     }
 
-    private void readFromClient(TCPChannelClientConnection c) {
+    private void readFromClient(ClientConnection c) {
         try {
             c.readRequest();
         } catch (NetworkCommunicationFailedException | UnknownDataTypeReceived e) {
             Logger.getGlobal().warn("Ошибка коммуникации с клиентом", e);
 
             removeClientConnection(c);
-        } catch (ClientDisconnectedException e) {
+        } catch (EndpointDisconnectedException e) {
             removeClientConnection(c);
         }
     }
 
-    private void writeToClient(TCPChannelClientConnection c) {
+    private void writeToClient(ClientConnection c) {
         try {
             c.writeResponse();
         } catch (NetworkCommunicationFailedException e) {
             Logger.getGlobal().warn("Ошибка коммуникации с клиентом", e);
             
             removeClientConnection(c);
-        } catch (ClientDisconnectedException e) {
+        } catch (EndpointDisconnectedException e) {
             removeClientConnection(c);
         }
     }
@@ -145,11 +147,11 @@ public class TCPChannelConnectionProvider extends ConnectionProvider implements 
     public void close() throws IOException {
         var it = connections.iterator();
         while (it.hasNext()) {
-            TCPChannelClientConnection c = it.next();
+            ClientConnection c = it.next();
             try {
                 c.close();
             } catch (IOException e) {
-
+                Logger.getGlobal().warn("Не удалось закрыть соединение с клиентом");
             } finally {
                 it.remove();
             }

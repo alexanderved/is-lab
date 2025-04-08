@@ -20,7 +20,8 @@ import client.controller.commands.RemoveByIDCommand;
 import client.controller.commands.RemoveLowerCommand;
 import client.controller.commands.ShowCommand;
 import client.controller.commands.UpdateCommand;
-import client.network.TCPStreamServerConnection;
+import client.network.ServerConnection;
+import client.network.TCPSocketClientSideEndpoint;
 import client.view.View;
 import client.view.cli.Cli;
 
@@ -31,9 +32,9 @@ public class Main {
         View view = new Cli();
         GeneralCommandParser cmdParser = new GeneralCommandParser();
 
-        TCPStreamServerConnection conn;
+        ServerConnection conn;
         try {
-            conn = new TCPStreamServerConnection(InetAddress.getLoopbackAddress(), PORT);
+            conn = new ServerConnection(new TCPSocketClientSideEndpoint(InetAddress.getLoopbackAddress(), PORT));
         } catch (IOException e) {
             view.error(e.getMessage());
 
