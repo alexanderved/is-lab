@@ -7,7 +7,17 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
+/**
+ * Сериализатор объектов.
+ */
 public final class CustomSerializer {
+    /**
+     * Сериализует объект и записывает его в данный поток.
+     *
+     * @param outputStream Выходной поток
+     * @param o Объект для сериализации
+     * @throws IOException если при сериализации возникла ошибка ввода-вывода
+     */
     public static void serializeTo(OutputStream outputStream, Object o) throws IOException {
         ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
         ObjectOutputStream objectOutput = new ObjectOutputStream(byteOutput);
@@ -21,6 +31,13 @@ public final class CustomSerializer {
         dataOutput.flush();
     }
 
+    /**
+     * Сериализует объект и возвращает полученный набор байт.
+     *
+     * @param o Объект для сериализации
+     * @return Байтовое представление объекта
+     * @throws IOException если при сериализации возникла ошибка ввода-вывода
+     */
     public static ByteBuffer serialize(Object o) throws IOException {
         ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
         ObjectOutputStream objectOutput = new ObjectOutputStream(byteOutput);

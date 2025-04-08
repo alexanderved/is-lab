@@ -11,9 +11,16 @@ import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
+/**
+ * Конечная точка на стороне сервера, использующая TCP-канал.
+ */
 public class TCPChannelServerSideEndpoint extends Endpoint {
     private final SocketChannel channel;
 
+    /**
+     * @param channel TCP-канал, подключенный к клиенту
+     * @throws IOException если возникла ошибка сети
+     */
     public TCPChannelServerSideEndpoint(SocketChannel channel) throws IOException {
         this.channel = channel;
         try {
@@ -25,6 +32,9 @@ public class TCPChannelServerSideEndpoint extends Endpoint {
         }
     }
 
+    /**
+     * @return используемый TCP-канал
+     */
     public SocketChannel getChannel() {
         return channel;
     }

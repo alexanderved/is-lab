@@ -13,7 +13,7 @@ public abstract class RequestExecutor {
      * Исполняет запрос к серверу.
      * 
      * @param req Запрос к серверу
-     * @param runner Исполнитель запросов
+     * @param runner Исполнитель задач сервера
      * @return ответ на запрос
      * @throws UnsupportedRequestException если исполнение данного запроса не поддерживается
      */

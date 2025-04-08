@@ -17,12 +17,19 @@ import server.logger.Logger;
 import server.network.connections.ClientConnection;
 import server.network.connections.TCPChannelServerSideEndpoint;
 
+/**
+ * Провайдер соединений с клиентами, использующий TCP-канал.
+ */
 public class TCPChannelConnectionProvider extends ConnectionProvider implements Closeable {
     private ServerSocketChannel serverChannel;
     private Selector selector;
     private Set<ClientConnection> connections = new HashSet<>();
     private Set<ClientConnection> readyConnections = new HashSet<>();
 
+    /**
+     * @param addr Адрес сервера
+     * @throws IOException если при подключении возникла ошибка сети
+     */
     public TCPChannelConnectionProvider(SocketAddress addr) throws IOException {
         serverChannel = ServerSocketChannel.open();
 

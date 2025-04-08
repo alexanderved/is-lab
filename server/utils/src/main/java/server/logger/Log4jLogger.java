@@ -2,8 +2,11 @@ package server.logger;
 
 import org.apache.logging.log4j.LogManager;
 
+/**
+ * Логгер, использующий Log4j.
+ */
 public class Log4jLogger extends Logger {
-    org.apache.logging.log4j.Logger logger;
+    private org.apache.logging.log4j.Logger logger;
 
     public Log4jLogger() {
         logger = LogManager.getLogger("Server Log");

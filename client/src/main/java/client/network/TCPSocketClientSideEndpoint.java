@@ -12,9 +12,17 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 
+/**
+ * Конечная точка на стороне клиента, используящая TCP-сокет для связи с сервером.
+ */
 public class TCPSocketClientSideEndpoint extends Endpoint {
     private final Socket socket;
 
+    /**
+     * @param addr Адресс сервера
+     * @param port Порт сервера
+     * @throws IOException если при подключении возникла ошибка ввода-вывода
+     */
     public TCPSocketClientSideEndpoint(InetAddress addr, int port) throws IOException {
         socket = new Socket(addr, port);
     }

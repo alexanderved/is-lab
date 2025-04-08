@@ -10,10 +10,17 @@ import server.logger.Logger;
 import server.network.connections.ClientConnection;
 import server.network.providers.ConnectionProvider;
 
+/**
+ * Класс, выступающий посредником между соединениями с клиентами и исполнителями запросов.
+ */
 public class ClientResponder {
     private ConnectionProvider provider;
     private RequestExecutor reqExecutor;
 
+    /**
+     * @param provider Провайдер соединений с клиентами
+     * @param reqExecutor Исполнитель запросов
+     */
     public ClientResponder(ConnectionProvider provider, RequestExecutor reqExecutor) {
         if (provider == null) {
             throw new IllegalArgumentException(
@@ -28,6 +35,12 @@ public class ClientResponder {
         this.reqExecutor = reqExecutor;
     }
 
+    /**
+     * Исполняет запросы клиентов и посылает ответы.
+     *
+     * @param runner Исполнитель задач сервера
+     * @throws NetworkCommunicationFailedException если в процессе коммуникации возникла ошибка сети
+     */
     public void respond(Runner runner) throws NetworkCommunicationFailedException {
         var it = provider.provide().iterator();
         while (it.hasNext()) {

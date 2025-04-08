@@ -5,7 +5,7 @@ import server.application.CollectionManager;
 import server.logger.Logger;
 
 /**
- * Обработчик запросов к серверу.
+ * Исполнитель задач сервера.
  */
 public class Runner {
     private State state = State.STOPPED;
