@@ -20,31 +20,35 @@ public class WriteReadyState extends ConnectionState {
     public synchronized void writeResponse() throws NetworkCommunicationFailedException {
         getClientConnection().setState(new WorkingState(getClientConnection()));
 
-        try {
-            getClientConnection().getEndpoint().write(bufferedOutput);
-        } catch (NetworkCommunicationFailedException e) {
-            getClientConnection().disconnect();
+        getClientConnection().getTaskExecutor().submitWrite(() -> {
+            synchronized (this) {
+                try {
+                    getClientConnection().getEndpoint().write(bufferedOutput);
+                } catch (NetworkCommunicationFailedException e) {
+                    getClientConnection().disconnect();
 
-            throw new NetworkCommunicationFailedException(e);
-        } catch (EndpointDisconnectedException e) {
-            getClientConnection().disconnect();
+                    Logger.getGlobal().warn("Ошибка при записи ответа", e);
+                } catch (EndpointDisconnectedException e) {
+                    getClientConnection().disconnect();
 
-            return;
-        }
+                    return;
+                }
 
-        if (bufferedOutput.hasRemaining()) {
-            getClientConnection().setState(this);
+                if (bufferedOutput.hasRemaining()) {
+                    getClientConnection().setState(this);
 
-            return;
-        }
+                    return;
+                }
 
-        getClientConnection().setState(new ReadReadyState(getClientConnection()));
+                try {
+                    Logger.getGlobal().info("Отправлен ответ клиенту по адресу "
+                            + getClientConnection().getEndpoint().getRemoteAddress());
+                } catch (NetworkCommunicationFailedException e) {
+                    Logger.getGlobal().info("Отправлен ответ клиенту");
+                }
 
-        try {
-            Logger.getGlobal().info("Отправлен ответ клиенту по адресу "
-                    + getClientConnection().getEndpoint().getRemoteAddress());
-        } catch (NetworkCommunicationFailedException e) {
-            Logger.getGlobal().info("Отправлен ответ клиенту");
-        }
+                getClientConnection().setState(new ReadReadyState(getClientConnection()));
+            }
+        });
     }
 }

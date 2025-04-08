@@ -23,36 +23,51 @@ public class ReadReadyState extends ConnectionState {
             throws NetworkCommunicationFailedException, UnknownDataTypeReceived {
         getClientConnection().setState(new WorkingState(getClientConnection()));
 
-        if (bufferedInput == null) {
-            bufferedInput = ByteBuffer.allocate(Integer.BYTES);
-        }
+        getClientConnection().getTaskExecutor().submitRead(() -> {
+            synchronized (this) {
+                if (bufferedInput == null) {
+                    bufferedInput = ByteBuffer.allocate(Integer.BYTES);
+                }
 
-        if (!readLength()) {
-            return;
-        }
+                try {
+                    if (!readLength()) {
+                        return;
+                    }
+                } catch (NetworkCommunicationFailedException e) {
+                    Logger.getGlobal().warn("Ошибка при чтении запроса", e);
+                }
 
-        if (!readData()) {
-            getClientConnection().setState(this);
+                try {
+                    if (!readData()) {
+                        getClientConnection().setState(this);
 
-            return;
-        }
+                        return;
+                    }
+                } catch (NetworkCommunicationFailedException e) {
+                    Logger.getGlobal().warn("Ошибка при чтении запроса", e);
+                }
 
-        try {
-            bufferedInput.rewind();
-            NetworkRequest pendingRequest = (NetworkRequest) CustomDeserializer.deserialize(bufferedInput);
-            getClientConnection().setState(new HasPendingRequestState(getClientConnection(), pendingRequest));
-        } catch (IOException | ClassNotFoundException e) {
-            getClientConnection().disconnect();
+                try {
+                    bufferedInput.rewind();
+                    NetworkRequest pendingRequest =
+                            (NetworkRequest) CustomDeserializer.deserialize(bufferedInput);
 
-            throw new UnknownDataTypeReceived(e);
-        }
+                    try {
+                        Logger.getGlobal().info("Получен запрос от клиента по адресу "
+                                + getClientConnection().getEndpoint().getRemoteAddress());
+                    } catch (NetworkCommunicationFailedException e) {
+                        Logger.getGlobal().info("Получен запрос от клиента");
+                    }
 
-        try {
-            Logger.getGlobal().info("Получен запрос от клиента по адресу "
-                    + getClientConnection().getEndpoint().getRemoteAddress());
-        } catch (NetworkCommunicationFailedException e) {
-            Logger.getGlobal().info("Получен запрос от клиента");
-        }
+                    getClientConnection()
+                            .setState(new HasPendingRequestState(getClientConnection(), pendingRequest));
+                } catch (IOException | ClassNotFoundException e) {
+                    getClientConnection().disconnect();
+
+                    Logger.getGlobal().warn("Ошибка при чтении запроса", e);
+                }
+            }
+        });
     }
 
     private synchronized boolean readLength() throws NetworkCommunicationFailedException {

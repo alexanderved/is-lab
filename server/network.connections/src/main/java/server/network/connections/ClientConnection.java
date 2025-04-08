@@ -18,13 +18,15 @@ import java.io.IOException;
  * Соединение с клиентом.
  */
 public class ClientConnection implements Closeable {
+    private final TaskExecutor executor;
     private final Endpoint endpoint;
     private ConnectionState state;
 
     /**
      * @param endpoint Конечная точка соединения на стороне сервера
      */
-    public ClientConnection(Endpoint endpoint) {
+    public ClientConnection(TaskExecutor executor, Endpoint endpoint) {
+        this.executor = executor;
         this.endpoint = endpoint;
         state = new ReadReadyState(this);
     }
@@ -79,6 +81,13 @@ public class ClientConnection implements Closeable {
      */
     public synchronized boolean hasPendingRequest() {
         return getState() instanceof HasPendingRequestState;
+    }
+
+    /**
+     * @return исполнитель задач чтения-записи
+     */
+    public synchronized TaskExecutor getTaskExecutor() {
+        return executor;
     }
 
     /**

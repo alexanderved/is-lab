@@ -16,21 +16,24 @@ import common.exceptions.UnknownDataTypeReceived;
 import server.logger.Logger;
 import server.network.connections.ClientConnection;
 import server.network.connections.TCPChannelServerSideEndpoint;
+import server.network.connections.TaskExecutor;
 
 /**
  * Провайдер соединений с клиентами, использующий TCP-канал.
  */
 public class TCPChannelConnectionProvider extends ConnectionProvider implements Closeable {
-    private ServerSocketChannel serverChannel;
-    private Selector selector;
-    private Set<ClientConnection> connections = new HashSet<>();
-    private Set<ClientConnection> readyConnections = new HashSet<>();
+    private final TaskExecutor executor;
+    private final ServerSocketChannel serverChannel;
+    private final Selector selector;
+    private final Set<ClientConnection> connections = new HashSet<>();
+    private final Set<ClientConnection> readyConnections = new HashSet<>();
 
     /**
      * @param addr Адрес сервера
      * @throws IOException если при подключении возникла ошибка сети
      */
-    public TCPChannelConnectionProvider(SocketAddress addr) throws IOException {
+    public TCPChannelConnectionProvider(TaskExecutor executor, SocketAddress addr) throws IOException {
+        this.executor = executor;
         serverChannel = ServerSocketChannel.open();
 
         try {
@@ -97,7 +100,7 @@ public class TCPChannelConnectionProvider extends ConnectionProvider implements 
 
     private void addClientConnection(SocketChannel channel) {
         try {
-            ClientConnection c = new ClientConnection(new TCPChannelServerSideEndpoint(channel));
+            ClientConnection c = new ClientConnection(executor, new TCPChannelServerSideEndpoint(channel));
             connections.add(c);
             channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE, c);
 

@@ -22,6 +22,7 @@ WORKDIR /usr/client
 
 RUN microdnf install findutils
 
+COPY ./test.script .
 COPY --from=builder $APP_SRC/client/build/install/client/bin/ bin/
 COPY --from=builder $APP_SRC/client/build/install/client/lib/ lib/
 

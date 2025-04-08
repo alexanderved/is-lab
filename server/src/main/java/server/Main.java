@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.Executors;
 
 import server.application.CollectionManager;
 import server.application.IDGenerator;
@@ -27,6 +28,7 @@ import server.controller.executors.UpdateRequestExecutor;
 import server.exceptions.RepositoryAccessDeniedException;
 import server.exceptions.RepositoryDataCorruptedException;
 import server.logger.Logger;
+import server.network.connections.TaskExecutor;
 import server.network.providers.TCPChannelConnectionProvider;
 import server.repository.xml.XmlRepository;
 
@@ -42,10 +44,14 @@ public class Main {
             return;
         }
 
+        // TODO: Use Executors from the task
+        TaskExecutor executor = new TaskExecutor(
+                Executors.newFixedThreadPool(5), Executors.newCachedThreadPool());
+
         SocketAddress addr = new InetSocketAddress(InetAddress.getByAddress(new byte[]{0, 0, 0, 0}), PORT);
         TCPChannelConnectionProvider provider;
         try {
-            provider = new TCPChannelConnectionProvider(addr);
+            provider = new TCPChannelConnectionProvider(executor, addr);
         } catch (IOException e) {
             Logger.getGlobal().error(e.toString(), e);
 
