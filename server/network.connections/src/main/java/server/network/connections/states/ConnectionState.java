@@ -29,9 +29,7 @@ public abstract class ConnectionState {
      */
     public void readRequest()
             throws NetworkCommunicationFailedException, UnknownDataTypeReceived, EndpointDisconnectedException {
-        if (connection.isDisconnected()) {
-            throw new EndpointDisconnectedException();
-        }
+        
     }
 
     /**
@@ -41,9 +39,7 @@ public abstract class ConnectionState {
      * @throws EndpointDisconnectedException       если соединение разорвано
      */
     public void writeResponse() throws NetworkCommunicationFailedException, EndpointDisconnectedException {
-        if (connection.isDisconnected()) {
-            throw new EndpointDisconnectedException();
-        }
+
     }
 
     /**
