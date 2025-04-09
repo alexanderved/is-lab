@@ -12,7 +12,6 @@ import java.util.Set;
 
 import common.exceptions.EndpointDisconnectedException;
 import common.exceptions.NetworkCommunicationFailedException;
-import common.exceptions.UnknownDataTypeReceived;
 import server.logger.Logger;
 import server.network.connections.ClientConnection;
 import server.network.connections.TCPChannelServerSideEndpoint;
@@ -132,10 +131,6 @@ public class TCPChannelConnectionProvider extends ConnectionProvider implements 
     private void readFromClient(ClientConnection c) {
         try {
             c.readRequest();
-        } catch (NetworkCommunicationFailedException | UnknownDataTypeReceived e) {
-            Logger.getGlobal().warn("Ошибка коммуникации с клиентом", e);
-
-            removeClientConnection(c);
         } catch (EndpointDisconnectedException e) {
             removeClientConnection(c);
         }
@@ -144,10 +139,6 @@ public class TCPChannelConnectionProvider extends ConnectionProvider implements 
     private void writeToClient(ClientConnection c) {
         try {
             c.writeResponse();
-        } catch (NetworkCommunicationFailedException e) {
-            Logger.getGlobal().warn("Ошибка коммуникации с клиентом", e);
-            
-            removeClientConnection(c);
         } catch (EndpointDisconnectedException e) {
             removeClientConnection(c);
         }

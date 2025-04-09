@@ -2,7 +2,6 @@ package server.network.connections.states;
 
 import common.exceptions.EndpointDisconnectedException;
 import common.exceptions.NetworkCommunicationFailedException;
-import common.exceptions.UnknownDataTypeReceived;
 import common.network.requests.NetworkRequest;
 import common.utils.CustomDeserializer;
 import server.logger.Logger;
@@ -19,8 +18,7 @@ public class ReadReadyState extends ConnectionState {
     }
 
     @Override
-    public synchronized void readRequest()
-            throws NetworkCommunicationFailedException, UnknownDataTypeReceived {
+    public synchronized void readRequest() {
         getClientConnection().setState(new WorkingState(getClientConnection()));
 
         getClientConnection().getTaskExecutor().submitRead(() -> {

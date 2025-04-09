@@ -1,8 +1,6 @@
 package server.network.connections.states;
 
 import common.exceptions.EndpointDisconnectedException;
-import common.exceptions.NetworkCommunicationFailedException;
-import common.exceptions.UnknownDataTypeReceived;
 import server.network.connections.ClientConnection;
 
 public class DisconnectedState extends ConnectionState {

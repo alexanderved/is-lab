@@ -2,7 +2,6 @@ package server.network.connections;
 
 import common.exceptions.EndpointDisconnectedException;
 import common.exceptions.NetworkCommunicationFailedException;
-import common.exceptions.UnknownDataTypeReceived;
 import common.network.Endpoint;
 import common.network.requests.NetworkRequest;
 import common.network.responses.NetworkResponse;
@@ -34,12 +33,9 @@ public class ClientConnection implements Closeable {
     /**
      * Читает запрос от клиента.
      *
-     * @throws NetworkCommunicationFailedException если возникла ошибка сети
-     * @throws UnknownDataTypeReceived             если получены данные неизвестного типа
      * @throws EndpointDisconnectedException       если соединение разорвано
      */
-    public synchronized void readRequest()
-            throws NetworkCommunicationFailedException, UnknownDataTypeReceived, EndpointDisconnectedException {
+    public synchronized void readRequest() throws EndpointDisconnectedException {
         state.readRequest();
     }
 
@@ -49,7 +45,7 @@ public class ClientConnection implements Closeable {
      * @throws NetworkCommunicationFailedException если возникла ошибка сети
      * @throws EndpointDisconnectedException       если соединение разорвано
      */
-    public synchronized void writeResponse() throws NetworkCommunicationFailedException, EndpointDisconnectedException {
+    public synchronized void writeResponse() throws EndpointDisconnectedException {
         state.writeResponse();
     }
 

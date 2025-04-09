@@ -1,8 +1,6 @@
 package server.network.connections.states;
 
 import common.exceptions.EndpointDisconnectedException;
-import common.exceptions.NetworkCommunicationFailedException;
-import common.exceptions.UnknownDataTypeReceived;
 import common.network.requests.NetworkRequest;
 import common.network.responses.NetworkResponse;
 import server.network.connections.ClientConnection;
@@ -23,23 +21,20 @@ public abstract class ConnectionState {
     /**
      * Читает запрос от клиента.
      *
-     * @throws NetworkCommunicationFailedException если возникла ошибка сети
-     * @throws UnknownDataTypeReceived             если получены данные неизвестного типа
      * @throws EndpointDisconnectedException       если соединение разорвано
      */
     public synchronized void readRequest()
-            throws NetworkCommunicationFailedException, UnknownDataTypeReceived, EndpointDisconnectedException {
+            throws EndpointDisconnectedException {
         
     }
 
     /**
      * Записывает ответ клиенту.
      *
-     * @throws NetworkCommunicationFailedException если возникла ошибка сети
      * @throws EndpointDisconnectedException       если соединение разорвано
      */
     public synchronized void writeResponse()
-            throws NetworkCommunicationFailedException, EndpointDisconnectedException {
+            throws EndpointDisconnectedException {
         
     }
 
