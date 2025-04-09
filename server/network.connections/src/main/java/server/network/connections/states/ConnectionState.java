@@ -48,7 +48,7 @@ public abstract class ConnectionState {
      */
     public synchronized NetworkRequest pollRequest() {
         throw new IllegalStateException("Для выполнения данного метода соединение "
-                + "должно находиться в другом состоянии");
+                + "не должно находиться в состоянии `" + getClass().getName() + "`");
     }
 
     /**
@@ -58,7 +58,7 @@ public abstract class ConnectionState {
      */
     public synchronized void offerResponse(NetworkResponse response) {
         throw new IllegalStateException("Для выполнения данного метода соединение "
-                + "должно находиться в другом состоянии");
+                + "не должно находиться в состоянии `" + getClass().getName() + "`");
     }
 
     /**

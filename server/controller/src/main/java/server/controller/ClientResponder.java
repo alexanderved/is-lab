@@ -45,21 +45,22 @@ public class ClientResponder {
         var it = provider.provide().iterator();
         while (it.hasNext()) {
             ClientConnection c = it.next();
+            it.remove();
 
             NetworkRequest req = c.pollRequest();
-            try {
-                NetworkResponse res = reqExecutor.execute(req, runner);
-                Logger.getGlobal().info("Выполнен запрос `" + req.getName() + "`");
+            new Thread(() -> {
+                try {
+                    NetworkResponse res = reqExecutor.execute(req, runner);
+                    Logger.getGlobal().info("Выполнен запрос `" + req.getName() + "`");
 
-                c.offerResponse(res);
-            } catch (UnsupportedRequestException reqException) {
-                Logger.getGlobal().warn("В процессе выполнения запроса `" + req.getName()
-                        + "` произошла ошибка");
+                    c.offerResponse(res);
+                } catch (UnsupportedRequestException reqException) {
+                    Logger.getGlobal().warn("В процессе выполнения запроса `" + req.getName()
+                            + "` произошла ошибка");
 
-                c.offerResponse(new ErrorResponse(reqException.getMessage()));
-            }
-
-            it.remove();
+                    c.offerResponse(new ErrorResponse(reqException.getMessage()));
+                }
+            }).start();
         }
     }
 }
