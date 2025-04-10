@@ -7,6 +7,8 @@ import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.Executors;
 
+import common.domain.*;
+import common.exceptions.InvalidFieldFormatException;
 import server.application.CollectionManager;
 import server.application.IDGenerator;
 import server.application.IncrementalIDGenerator;
@@ -26,83 +28,101 @@ import server.controller.executors.RemoveLowerRequestExecutor;
 import server.controller.executors.ShowRequestExecutor;
 import server.controller.executors.UpdateRequestExecutor;
 import server.exceptions.RepositoryAccessDeniedException;
+import server.exceptions.RepositoryAccessFailedException;
 import server.exceptions.RepositoryDataCorruptedException;
 import server.logger.Logger;
 import server.network.connections.TaskExecutor;
 import server.network.providers.TCPChannelConnectionProvider;
-import server.repository.xml.XmlRepository;
+import server.repository.postgresql.PostgreSQLRepository;
 
 public class Main {
     public static final int PORT = 4891;
     
-    public static void main(String[] args) throws UnknownHostException {
-        String repoPath = System.getenv("REPO_PATH");
-        if (repoPath == null) {
-            System.err.println("Файл репозитория не найден."
-                + " Необходимо установить переменную окружения `REPO_PATH`.");
+    public static void main(String[] args)
+            throws UnknownHostException, RepositoryAccessDeniedException,
+            RepositoryAccessFailedException, InvalidFieldFormatException {
+        PostgreSQLRepository repo = new PostgreSQLRepository(
+                "jdbc:postgresql://localhost:5432/studs", "alex", "");
 
-            return;
-        }
+        OrganizationTemplate template = new OrganizationTemplate.Builder()
+                .setName("A")
+                .setCoordinates(new Coordinates(1.0f, 1))
+                .setEmployeesCount(1)
+                .setType(OrganizationType.TRUST)
+                .setOfficialAddress(new Address("Test", new Location(1, 1l, 1)))
+                .build();
+        Organization org = new Organization(1, template);
 
-        // TODO: Use Executors from the task
-        TaskExecutor executor = new TaskExecutor(
-                Executors.newFixedThreadPool(5), Executors.newCachedThreadPool());
+        repo.add(org);
 
-        SocketAddress addr = new InetSocketAddress(InetAddress.getByAddress(new byte[]{0, 0, 0, 0}), PORT);
-        TCPChannelConnectionProvider provider;
-        try {
-            provider = new TCPChannelConnectionProvider(executor, addr);
-        } catch (IOException e) {
-            Logger.getGlobal().error(e.toString(), e);
 
-            return;
-        }
-
-        IDGenerator idGen = new IncrementalIDGenerator();
-        XmlRepository repo = new XmlRepository(repoPath);
-        CollectionManager collection;
-        try {
-            collection = new CollectionManager(idGen, repo);
-        } catch (RepositoryAccessDeniedException | RepositoryDataCorruptedException e) {
-            Logger.getGlobal().error(e.toString(), e);
-
-            return;
-        }
-        GeneralRequestExecutor reqExecutor = new GeneralRequestExecutor();
-        ClientResponder responder = new ClientResponder(provider, reqExecutor);
-
-        Runner runner = new Runner(responder, collection);
-
-        reqExecutor.register("info", new InfoRequestExecutor());
-        reqExecutor.register("show", new ShowRequestExecutor());
-        reqExecutor.register("add", new AddRequestExecutor());
-        reqExecutor.register("update", new UpdateRequestExecutor());
-        reqExecutor.register("remove_by_id", new RemoveByIDRequestExecutor());
-        reqExecutor.register("clear", new ClearRequestExecutor());
-        reqExecutor.register("add_if_max", new AddIfMaxRequestExecutor());
-        reqExecutor.register("add_if_min", new AddIfMinRequestExecutor());
-        reqExecutor.register("remove_lower", new RemoveLowerRequestExecutor());
-        reqExecutor.register("average_of_employees_count",
-            new AverageOfEmployeesCountRequestExecutor());
-        reqExecutor.register("filter_starts_with_full_name",
-            new FilterStartsWithFullNameRequestExecutor());
-        reqExecutor.register("print_field_descending_annual_turnover",
-            new PrintFieldDescendingAnnualTurnoverRequestExecutor());
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                collection.save();
-            } catch (RepositoryAccessDeniedException e) {
-                Logger.getGlobal().error(e.toString(), e);
-            }
-
-            try {
-                provider.close();
-            } catch (IOException e) {
-                Logger.getGlobal().error(e.toString(), e);
-            }
-        }));
-
-        runner.run();
+//        String repoPath = System.getenv("REPO_PATH");
+//        if (repoPath == null) {
+//            System.err.println("Файл репозитория не найден."
+//                + " Необходимо установить переменную окружения `REPO_PATH`.");
+//
+//            return;
+//        }
+//
+//        // TODO: Use Executors from the task
+//        TaskExecutor executor = new TaskExecutor(
+//                Executors.newFixedThreadPool(5), Executors.newCachedThreadPool());
+//
+//        SocketAddress addr = new InetSocketAddress(InetAddress.getByAddress(new byte[]{0, 0, 0, 0}), PORT);
+//        TCPChannelConnectionProvider provider;
+//        try {
+//            provider = new TCPChannelConnectionProvider(executor, addr);
+//        } catch (IOException e) {
+//            Logger.getGlobal().error(e.toString(), e);
+//
+//            return;
+//        }
+//
+//        IDGenerator idGen = new IncrementalIDGenerator();
+//        XmlRepository repo = new XmlRepository(repoPath);
+//        CollectionManager collection;
+//        try {
+//            collection = new CollectionManager(idGen, repo);
+//        } catch (RepositoryAccessDeniedException | RepositoryDataCorruptedException e) {
+//            Logger.getGlobal().error(e.toString(), e);
+//
+//            return;
+//        }
+//        GeneralRequestExecutor reqExecutor = new GeneralRequestExecutor();
+//        ClientResponder responder = new ClientResponder(provider, reqExecutor);
+//
+//        Runner runner = new Runner(responder, collection);
+//
+//        reqExecutor.register("info", new InfoRequestExecutor());
+//        reqExecutor.register("show", new ShowRequestExecutor());
+//        reqExecutor.register("add", new AddRequestExecutor());
+//        reqExecutor.register("update", new UpdateRequestExecutor());
+//        reqExecutor.register("remove_by_id", new RemoveByIDRequestExecutor());
+//        reqExecutor.register("clear", new ClearRequestExecutor());
+//        reqExecutor.register("add_if_max", new AddIfMaxRequestExecutor());
+//        reqExecutor.register("add_if_min", new AddIfMinRequestExecutor());
+//        reqExecutor.register("remove_lower", new RemoveLowerRequestExecutor());
+//        reqExecutor.register("average_of_employees_count",
+//            new AverageOfEmployeesCountRequestExecutor());
+//        reqExecutor.register("filter_starts_with_full_name",
+//            new FilterStartsWithFullNameRequestExecutor());
+//        reqExecutor.register("print_field_descending_annual_turnover",
+//            new PrintFieldDescendingAnnualTurnoverRequestExecutor());
+//
+//        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+//            try {
+//                collection.save();
+//            } catch (RepositoryAccessDeniedException e) {
+//                Logger.getGlobal().error(e.toString(), e);
+//            }
+//
+//            try {
+//                provider.close();
+//            } catch (IOException e) {
+//                Logger.getGlobal().error(e.toString(), e);
+//            }
+//        }));
+//
+//        runner.run();
     }
 }

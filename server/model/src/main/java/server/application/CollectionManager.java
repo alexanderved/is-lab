@@ -191,7 +191,7 @@ public class CollectionManager {
      *                                         доступ к репозиторию
      */
     public synchronized void save() throws RepositoryAccessDeniedException {
-        repo.save(collection);
+        //repo.save(collection);
     }
 
     /**

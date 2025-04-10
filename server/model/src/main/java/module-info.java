@@ -1,7 +1,7 @@
 module model {
     exports server.application;
     exports server.repository;
-    exports server.repository.xml;
+    exports server.repository.postgresql;
     requires transitive utils;
-    requires java.xml;
+    requires java.sql;
 }

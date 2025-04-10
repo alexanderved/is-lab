@@ -2,7 +2,6 @@ package server.network.connections;
 
 import server.logger.Logger;
 
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
 /**

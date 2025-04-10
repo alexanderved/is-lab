@@ -1,7 +1,7 @@
 package server.exceptions;
 
 /**
- * Исключение, выбрасываемое в том случае, когда не удалось получить ддоступ к
+ * Исключение, выбрасываемое в том случае, когда не удалось получить доступ к
  * репозиторию.
  */
 public class RepositoryAccessDeniedException extends Exception {
