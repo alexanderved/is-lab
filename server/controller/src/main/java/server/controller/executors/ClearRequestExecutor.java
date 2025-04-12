@@ -2,10 +2,12 @@ package server.controller.executors;
 
 import common.network.requests.ClearRequest;
 import common.network.requests.NetworkRequest;
+import common.network.responses.ErrorResponse;
 import common.network.responses.NetworkResponse;
 import common.network.responses.SuccessResponse;
 import common.utils.CommandInfo;
 import server.controller.Runner;
+import server.exceptions.CollectionOperationFailedException;
 import server.exceptions.UnsupportedRequestException;
 
 public class ClearRequestExecutor extends RequestExecutor {
@@ -16,7 +18,11 @@ public class ClearRequestExecutor extends RequestExecutor {
             throw new UnsupportedRequestException(req);
         }
 
-        runner.getCollectionManager().clear();
+        try {
+            runner.getCollectionManager().clear();
+        } catch (CollectionOperationFailedException e) {
+            return new ErrorResponse("Не удалось очистить коллекцию");
+        }
 
         return new SuccessResponse("Коллекция очищена");
     }

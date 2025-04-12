@@ -3,9 +3,11 @@ package server.controller.executors;
 import common.network.requests.AddRequest;
 import common.network.requests.NetworkRequest;
 import common.network.responses.AddResponse;
+import common.network.responses.ErrorResponse;
 import common.network.responses.NetworkResponse;
 import common.utils.CommandInfo;
 import server.controller.Runner;
+import server.exceptions.CollectionOperationFailedException;
 import server.exceptions.UnsupportedRequestException;
 
 public class AddRequestExecutor extends RequestExecutor {
@@ -16,8 +18,12 @@ public class AddRequestExecutor extends RequestExecutor {
         }
 
         AddRequest addReq = (AddRequest) req;
-        int newId = runner.getCollectionManager().add(addReq.getOrganizationTemplate());
+        try {
+            int newId = runner.getCollectionManager().add(addReq.getOrganizationTemplate());
 
-        return new AddResponse(newId);
+            return new AddResponse(newId);
+        } catch (CollectionOperationFailedException e) {
+            return new ErrorResponse("Не удалось добавить организацию");
+        }
     }
 }

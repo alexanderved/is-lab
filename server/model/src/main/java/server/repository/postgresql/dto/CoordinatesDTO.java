@@ -2,18 +2,23 @@ package server.repository.postgresql.dto;
 
 import common.domain.Coordinates;
 import common.exceptions.InvalidFieldFormatException;
+import org.postgresql.util.PGobject;
 
 import java.sql.SQLException;
-import java.sql.Struct;
-import java.util.Map;
+import java.util.Locale;
 
-public class CoordinatesDTO implements Struct {
+public class CoordinatesDTO {
     private final Float x;
     private final Integer y;
 
     private CoordinatesDTO(Coordinates c) {
         x = c.getX();
         y = c.getY();
+    }
+
+    private CoordinatesDTO(Float x, Integer y) {
+        this.x = x;
+        this.y = y;
     }
 
     public static CoordinatesDTO fromCoordinates(Coordinates c) {
@@ -28,18 +33,22 @@ public class CoordinatesDTO implements Struct {
         }
     }
 
-    @Override
-    public String getSQLTypeName() throws SQLException {
-        return "coordinates";
+    public static CoordinatesDTO fromPGobject(PGobject pgobj) {
+        String[] values = pgobj.getValue()
+                .substring(1, pgobj.getValue().length() - 1)
+                .split(",");
+
+        float x = Float.parseFloat(values[0]);
+        Integer y = Integer.parseInt(values[1]);
+
+        return new CoordinatesDTO(x, y);
     }
 
-    @Override
-    public Object[] getAttributes() throws SQLException {
-        return new Object[]{ x, y };
-    }
+    public PGobject toPGobject() throws SQLException {
+        PGobject pgobj = new PGobject();
+        pgobj.setType("coordinates");
+        pgobj.setValue(String.format(Locale.US, "(%f,%d)", x, y));
 
-    @Override
-    public Object[] getAttributes(Map<String, Class<?>> map) throws SQLException {
-        return getAttributes();
+        return pgobj;
     }
 }

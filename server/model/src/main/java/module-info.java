@@ -4,4 +4,5 @@ module model {
     exports server.repository.postgresql;
     requires transitive utils;
     requires java.sql;
+    requires org.postgresql.jdbc;
 }

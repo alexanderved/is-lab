@@ -3,11 +3,14 @@ package server.application;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import common.domain.Organization;
 import common.domain.OrganizationTemplate;
+import server.exceptions.CollectionOperationFailedException;
 import server.exceptions.RepositoryAccessDeniedException;
+import server.exceptions.RepositoryAccessFailedException;
 import server.exceptions.RepositoryDataCorruptedException;
 import server.logger.Logger;
 import server.repository.Repository;
@@ -29,7 +32,7 @@ public class CollectionManager {
      * @param repo Репозиторий организаций
      * @throws RepositoryAccessDeniedException если не удается получить
      *                                         доступ к репозиторию
-     * @throws RepositoryDataCorruptedException если данные в репозитории не соответстую
+     * @throws RepositoryDataCorruptedException если данные в репозитории не соответствуют
      *                                          ожидаемому формату
      * @see IDGenerator
      * @see Repository
@@ -62,10 +65,6 @@ public class CollectionManager {
             throw new RepositoryDataCorruptedException();
         }
 
-        collection.stream()
-            .map(Organization::getId)
-            .forEach(idGen::reserve);
-
         Logger.getGlobal().info("Коллекция загружена в память");
 
         return collection;
@@ -79,7 +78,7 @@ public class CollectionManager {
     }
 
     /**
-     * @return времяя инициализации управляемой коллекции
+     * @return время инициализации управляемой коллекции
      */
     public synchronized ZonedDateTime getInitDate() {
         return initDate;
@@ -117,23 +116,38 @@ public class CollectionManager {
      * 
      * @param template Шаблон новой организации
      * @return ID новой организации
+     * @throws CollectionOperationFailedException если не удалось изменить данные в репозитории
      * @see OrganizationTemplate
      */
-    public synchronized int add(OrganizationTemplate template) {
-        updateLastModDate();
-
+    public synchronized int add(OrganizationTemplate template)
+            throws CollectionOperationFailedException {
         int newId = idGen.generateID();
-        collection.add(new Organization(newId, template));
+        Organization org = new Organization(newId, template);
+        try {
+            repo.add(org);
+        } catch (RepositoryAccessFailedException e) {
+            throw new CollectionOperationFailedException(e);
+        }
+
+        collection.add(org);
+        updateLastModDate();
 
         return newId;
     }
 
     /**
-     * Удалаяет организацию из коллекции по ее ID.
+     * Удаляет организацию из коллекции по ее ID.
      * @param id ID организации, которую нужно удалить
      * @return {@code true}, если элемент с данным ID присутствовал в коллекции
+     * @throws CollectionOperationFailedException если не удалось изменить данные в репозитории
      */
-    public synchronized boolean removeById(int id) {
+    public synchronized boolean removeById(int id) throws CollectionOperationFailedException {
+        try {
+            repo.remove(id);
+        } catch (RepositoryAccessFailedException e) {
+            throw new CollectionOperationFailedException(e);
+        }
+
         if (collection.removeIf((org) -> org.getId() == id)) {
             updateLastModDate();
 
@@ -151,9 +165,18 @@ public class CollectionManager {
      * @see OrganizationTemplate
      */
     public synchronized void removeLower(OrganizationTemplate template) {
-        if (collection.removeIf((org) -> template.compareTo(org) > 0)) {
-            updateLastModDate();
-        }
+        List<Integer> removedIds = collection.stream()
+                .filter((org) -> template.compareTo(org) > 0)
+                .map(Organization::getId)
+                .toList();
+
+        removedIds.forEach((id) -> {
+                    try {
+                        removeById(id);
+                    } catch (CollectionOperationFailedException e) {
+                        Logger.getGlobal().warn("Не удалось удалить организацию с id = " + id, e);
+                    }
+                });
     }
 
     /**
@@ -161,8 +184,16 @@ public class CollectionManager {
      * @param id ID организации, которую нужно обновить
      * @param template Шаблон новых данных организации
      * @return {@code true}, если элемент с данным ID присутствует в коллекции
+     * @throws CollectionOperationFailedException если не удалось изменить данные в репозитории
      */
-    public synchronized boolean update(int id, OrganizationTemplate template) {
+    public synchronized boolean update(int id, OrganizationTemplate template)
+            throws CollectionOperationFailedException {
+        try {
+            repo.update(id, template);
+        } catch (RepositoryAccessFailedException e) {
+            throw new CollectionOperationFailedException(e);
+        }
+
         Optional<Organization> org = collection.stream()
             .filter((o) -> o.getId() == id)
             .findFirst();
@@ -178,20 +209,18 @@ public class CollectionManager {
 
     /**
      * Очищает коллекцию.
+     *
+     * @throws CollectionOperationFailedException если не удалось изменить данные в репозитории
      */
-    public synchronized void clear() {
-        updateLastModDate();
+    public synchronized void clear() throws CollectionOperationFailedException {
+        try {
+            repo.clear();
+        } catch (RepositoryAccessFailedException e) {
+            throw new CollectionOperationFailedException(e);
+        }
 
         collection.clear();
-    }
-
-    /**
-     * Сохраняет коллекцию организаций в репозиторий
-     * @throws RepositoryAccessDeniedException если не удается получить
-     *                                         доступ к репозиторию
-     */
-    public synchronized void save() throws RepositoryAccessDeniedException {
-        //repo.save(collection);
+        updateLastModDate();
     }
 
     /**
@@ -224,8 +253,8 @@ public class CollectionManager {
         }
 
         return collection.stream()
-            .map((org) -> org.getEmployeesCount())
-            .reduce(0, (a, b) -> a + b) / nbOrgs;
+            .map(Organization::getEmployeesCount)
+            .reduce(0, Integer::sum) / nbOrgs;
     }
 
     /**
@@ -233,8 +262,8 @@ public class CollectionManager {
      */
     public synchronized List<Float> getAnnualTurnovers() {
         return collection.stream()
-            .map((org) -> org.getAnnualTurnover())
-            .filter((annualTurnover) -> annualTurnover != null)
+            .map(Organization::getAnnualTurnover)
+            .filter(Objects::nonNull)
             .toList();
     }
 }

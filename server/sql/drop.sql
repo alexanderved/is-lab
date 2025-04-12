@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS organizations CASCADE;
+DROP SEQUENCE IF EXISTS organization_id_generator CASCADE;
 DROP TYPE IF EXISTS organization_type CASCADE;
 DROP TYPE IF EXISTS location CASCADE;
 DROP TYPE IF EXISTS coordinates CASCADE;

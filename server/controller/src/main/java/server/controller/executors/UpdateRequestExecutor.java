@@ -3,11 +3,13 @@ package server.controller.executors;
 import common.domain.OrganizationTemplate;
 import common.network.requests.NetworkRequest;
 import common.network.requests.UpdateRequest;
+import common.network.responses.ErrorResponse;
 import common.network.responses.FailureResponse;
 import common.network.responses.NetworkResponse;
 import common.network.responses.SuccessResponse;
 import common.utils.CommandInfo;
 import server.controller.Runner;
+import server.exceptions.CollectionOperationFailedException;
 import server.exceptions.UnsupportedRequestException;
 
 public class UpdateRequestExecutor extends RequestExecutor {
@@ -20,9 +22,13 @@ public class UpdateRequestExecutor extends RequestExecutor {
         UpdateRequest updateReq = (UpdateRequest) req;
         int id = updateReq.getID();
         OrganizationTemplate template = updateReq.getOrganizationTemplate();
-        
-        if (!runner.getCollectionManager().update(id, template)) {
-            return new FailureResponse("Не удалось найти элемент с данным ID");
+
+        try {
+            if (!runner.getCollectionManager().update(id, template)) {
+                return new FailureResponse("Не удалось найти элемент с данным ID");
+            }
+        } catch (CollectionOperationFailedException e) {
+            return new ErrorResponse("Не удалось обновить элемент с данным ID");
         }
 
         return new SuccessResponse("Данные организации с данным ID обновлены");

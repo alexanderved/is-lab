@@ -6,3 +6,8 @@ server/bin/
 out/
 proglab-sem2.iml
 .gradle
+server/controller/bin/
+server/model/bin/
+server/utils/bin/
+server/network.connections/bin/
+server/network.providers/bin/

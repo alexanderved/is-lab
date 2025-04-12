@@ -4,11 +4,13 @@ import common.domain.OrganizationTemplate;
 import common.network.requests.AddIfMinRequest;
 import common.network.requests.NetworkRequest;
 import common.network.responses.AddResponse;
+import common.network.responses.ErrorResponse;
 import common.network.responses.FailureResponse;
 import common.network.responses.NetworkResponse;
 import common.utils.CommandInfo;
 import server.application.CollectionManager;
 import server.controller.Runner;
+import server.exceptions.CollectionOperationFailedException;
 import server.exceptions.UnsupportedRequestException;
 
 public class AddIfMinRequestExecutor extends RequestExecutor {
@@ -27,6 +29,10 @@ public class AddIfMinRequestExecutor extends RequestExecutor {
                     + " ее значение не меньше значения наименьшего элемента коллекции");
         }
 
-        return new AddResponse(runner.getCollectionManager().add(template));
+        try {
+            return new AddResponse(runner.getCollectionManager().add(template));
+        } catch (CollectionOperationFailedException e) {
+            return new ErrorResponse("Не удалось добавить организацию");
+        }
     }
 }

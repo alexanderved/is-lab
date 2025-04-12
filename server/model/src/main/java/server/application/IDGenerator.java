@@ -9,10 +9,4 @@ public abstract class IDGenerator {
      * @return новый ID
      */
     public abstract int generateID();
-
-    /**
-     * Отмечает данный ID, как использованный.
-     * @param id ID, который уже используется организацией
-     */
-    public abstract void reserve(int id);
 }

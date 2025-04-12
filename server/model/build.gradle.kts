@@ -8,5 +8,5 @@ repositories {
 
 dependencies {
     api(project(":server:utils"))
-    implementation("org.postgresql:postgresql:42.1.4")
+    implementation("org.postgresql:postgresql:42.7.5")
 }
