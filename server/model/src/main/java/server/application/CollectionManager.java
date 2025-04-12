@@ -75,9 +75,8 @@ public class CollectionManager {
      * @return размер управляемой коллекции
      */
     public int getCollectionSize() {
+        lock.readLock().lock();
         try {
-            lock.readLock().lock();
-
             return collection.size();
         } finally {
             lock.readLock().unlock();
@@ -95,9 +94,8 @@ public class CollectionManager {
      * @return время модификации управляемой коллекции
      */
     public ZonedDateTime getLastModDate() {
+        lock.readLock().lock();
         try {
-            lock.readLock().lock();
-
             return lastModDate;
         } finally {
             lock.readLock().unlock();
@@ -105,9 +103,8 @@ public class CollectionManager {
     }
 
     private void updateLastModDate() {
+        lock.writeLock().lock();
         try {
-            lock.writeLock().lock();
-
             lastModDate = ZonedDateTime.now();
         } finally {
             lock.writeLock().unlock();
@@ -118,9 +115,8 @@ public class CollectionManager {
      * @return тип управляемой коллекции
      */
     public String getCollectionType() {
+        lock.readLock().lock();
         try {
-            lock.readLock().lock();
-
             return collection.getClass().getName();
         } finally {
             lock.readLock().unlock();
@@ -131,9 +127,8 @@ public class CollectionManager {
      * @return коллекцию, элементы которой отсортированы по имени
      */
     public List<Organization> getSortedCollection() {
+        lock.readLock().lock();
         try {
-            lock.readLock().lock();
-
             return collection.stream()
                     .sorted((a, b) -> a.getName().compareTo(b.getName()))
                     .toList();
@@ -152,9 +147,8 @@ public class CollectionManager {
      */
     public int add(OrganizationTemplate template)
             throws CollectionOperationFailedException {
+        lock.writeLock().lock();
         try {
-            lock.writeLock().lock();
-
             int newId = idGen.generateID();
             Organization org = new Organization(newId, template);
             try {
@@ -179,9 +173,8 @@ public class CollectionManager {
      * @throws CollectionOperationFailedException если не удалось изменить данные в репозитории
      */
     public boolean removeById(int id) throws CollectionOperationFailedException {
+        lock.writeLock().lock();
         try {
-            lock.writeLock().lock();
-
             try {
                 repo.remove(id);
             } catch (RepositoryAccessFailedException e) {
@@ -208,9 +201,8 @@ public class CollectionManager {
      * @see OrganizationTemplate
      */
     public void removeLower(OrganizationTemplate template) {
+        lock.writeLock().lock();
         try {
-            lock.writeLock().lock();
-
             List<Integer> removedIds = collection.stream()
                     .filter((org) -> template.compareTo(org) > 0)
                     .map(Organization::getId)
@@ -237,9 +229,8 @@ public class CollectionManager {
      */
     public boolean update(int id, OrganizationTemplate template)
             throws CollectionOperationFailedException {
+        lock.writeLock().lock();
         try {
-            lock.writeLock().lock();
-
             try {
                 repo.update(id, template);
             } catch (RepositoryAccessFailedException e) {
@@ -268,9 +259,8 @@ public class CollectionManager {
      * @throws CollectionOperationFailedException если не удалось изменить данные в репозитории
      */
     public void clear() throws CollectionOperationFailedException {
+        lock.writeLock().lock();
         try {
-            lock.writeLock().lock();
-
             try {
                 repo.clear();
             } catch (RepositoryAccessFailedException e) {
@@ -289,9 +279,8 @@ public class CollectionManager {
      * @see Organization
      */
     public Organization max() {
+        lock.readLock().lock();
         try {
-            lock.readLock().lock();
-
             return collection.stream()
                     .max(Organization::compareTo)
                     .orElse(null);
@@ -305,9 +294,8 @@ public class CollectionManager {
      * @see Organization
      */
     public Organization min() {
+        lock.readLock().lock();
         try {
-            lock.readLock().lock();
-
             return collection.stream()
                     .min(Organization::compareTo)
                     .orElse(null);
@@ -320,9 +308,8 @@ public class CollectionManager {
      * @return среднее арифметическое количеств сотрудников каждой из организаций
      */
     public int averageOfEmployeesCount() {
+        lock.readLock().lock();
         try {
-            lock.readLock().lock();
-
             int nbOrgs = getCollectionSize();
             if (nbOrgs == 0) {
                 return 0;
@@ -340,9 +327,8 @@ public class CollectionManager {
      * @return список годовых оборотов всех организаций
      */
     public List<Float> getAnnualTurnovers() {
+        lock.readLock().lock();
         try {
-            lock.readLock().lock();
-
             return collection.stream()
                     .map(Organization::getAnnualTurnover)
                     .filter(Objects::nonNull)
