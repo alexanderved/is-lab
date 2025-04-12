@@ -10,7 +10,7 @@ import server.network.connections.ClientConnection;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class ReadReadyState extends ConnectionState {
+public class ReadReadyState extends ReadLoopState {
     private ByteBuffer bufferedInput;
 
     public ReadReadyState(ClientConnection connection) {
@@ -19,7 +19,7 @@ public class ReadReadyState extends ConnectionState {
 
     @Override
     public synchronized void readRequest() {
-        getClientConnection().setState(new WorkingState(getClientConnection()));
+        getClientConnection().setState(new ReadingState(getClientConnection()));
 
         getClientConnection().getTaskExecutor().submitRead(() -> {
             synchronized (this) {

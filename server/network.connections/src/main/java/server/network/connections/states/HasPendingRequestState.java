@@ -3,7 +3,7 @@ package server.network.connections.states;
 import common.network.requests.NetworkRequest;
 import server.network.connections.ClientConnection;
 
-public class HasPendingRequestState extends ConnectionState {
+public class HasPendingRequestState extends ReadLoopState {
     private final NetworkRequest pendingRequest;
 
     public HasPendingRequestState(ClientConnection connection, NetworkRequest pendingRequest) {
@@ -14,7 +14,7 @@ public class HasPendingRequestState extends ConnectionState {
 
     @Override
     public synchronized NetworkRequest pollRequest() {
-        getClientConnection().setState(new WaitingResponseState(getClientConnection()));
+        getClientConnection().setState(new ReadReadyState(getClientConnection()));
 
         return pendingRequest;
     }

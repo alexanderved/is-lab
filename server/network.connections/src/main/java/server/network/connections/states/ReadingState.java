@@ -2,8 +2,8 @@ package server.network.connections.states;
 
 import server.network.connections.ClientConnection;
 
-public class WorkingState extends ConnectionState {
-    public WorkingState(ClientConnection connection) {
+public class ReadingState extends ReadLoopState {
+    public ReadingState(ClientConnection connection) {
         super(connection);
     }
 }

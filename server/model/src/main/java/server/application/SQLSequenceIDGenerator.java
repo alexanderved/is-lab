@@ -14,8 +14,6 @@ public class SQLSequenceIDGenerator extends IDGenerator {
     public SQLSequenceIDGenerator(Connection connection, String seqName) {
         this.connection = connection;
         this.seqName = seqName;
-
-        generateID();
     }
 
     @Override

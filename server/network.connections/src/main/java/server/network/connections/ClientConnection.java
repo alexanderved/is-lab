@@ -5,13 +5,15 @@ import common.exceptions.NetworkCommunicationFailedException;
 import common.network.Endpoint;
 import common.network.requests.NetworkRequest;
 import common.network.responses.NetworkResponse;
-import server.network.connections.states.ConnectionState;
-import server.network.connections.states.DisconnectedState;
-import server.network.connections.states.HasPendingRequestState;
-import server.network.connections.states.ReadReadyState;
+import common.utils.CustomSerializer;
+import server.logger.Logger;
+import server.network.connections.states.*;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * Соединение с клиентом.
@@ -19,7 +21,11 @@ import java.io.IOException;
 public class ClientConnection implements Closeable {
     private final TaskExecutor executor;
     private final Endpoint endpoint;
-    private ConnectionState state;
+    private ReadLoopState state;
+    private boolean isDisconnected = false;
+
+    private final Queue<ByteBuffer> bufferedOutput = new LinkedList<>();
+    private boolean isWriting = false;
 
     /**
      * @param endpoint Конечная точка соединения на стороне сервера
@@ -33,43 +39,101 @@ public class ClientConnection implements Closeable {
     /**
      * Читает запрос от клиента.
      *
-     * @throws EndpointDisconnectedException       если соединение разорвано
+     * @throws EndpointDisconnectedException если соединение разорвано
      */
     public synchronized void readRequest() throws EndpointDisconnectedException {
+        if (isDisconnected()) {
+            throw new EndpointDisconnectedException();
+        }
+
         state.readRequest();
     }
 
     /**
      * Записывает ответ клиенту.
      *
-     * @throws NetworkCommunicationFailedException если возникла ошибка сети
-     * @throws EndpointDisconnectedException       если соединение разорвано
+     * @throws EndpointDisconnectedException если соединение разорвано
      */
     public synchronized void writeResponse() throws EndpointDisconnectedException {
-        state.writeResponse();
+        if (isDisconnected()) {
+            throw new EndpointDisconnectedException();
+        }
+
+        if (isWriting || bufferedOutput.isEmpty()) {
+            return;
+        }
+
+        isWriting = true;
+        getTaskExecutor().submitWrite(() -> {
+            synchronized (this) {
+                while (!bufferedOutput.isEmpty()) {
+                    ByteBuffer buffer = bufferedOutput.peek();
+                    try {
+                        getEndpoint().write(buffer);
+                    } catch (NetworkCommunicationFailedException e) {
+                        disconnect();
+                        Logger.getGlobal().warn("Ошибка при записи ответа", e);
+
+                        return;
+                    } catch (EndpointDisconnectedException e) {
+                        disconnect();
+
+                        return;
+                    }
+
+                    if (buffer.hasRemaining()) {
+                        break;
+                    }
+
+                    bufferedOutput.poll();
+                    try {
+                        Logger.getGlobal().info("Отправлен ответ клиенту по адресу "
+                                + getEndpoint().getRemoteAddress());
+                    } catch (NetworkCommunicationFailedException e) {
+                        Logger.getGlobal().info("Отправлен ответ клиенту");
+                    }
+                }
+
+                isWriting = false;
+            }
+        });
     }
 
     /**
      * @return запрос от клиента
      */
-    public synchronized NetworkRequest pollRequest() {
+    public synchronized NetworkRequest pollRequest() throws EndpointDisconnectedException {
+        if (isDisconnected()) {
+            throw new EndpointDisconnectedException();
+        }
+
         return state.pollRequest();
     }
 
     /**
-     * Устанавливает ответ, который должен быть отправлен клиенту.
+     * Добавляет ответ, который должен быть отправлен клиенту.
      *
      * @param response Ответ клиенту
      */
-    public synchronized void offerResponse(NetworkResponse response) {
-        state.offerResponse(response);
+    public synchronized void offerResponse(NetworkResponse response) throws EndpointDisconnectedException  {
+        if (isDisconnected()) {
+            throw new EndpointDisconnectedException();
+        }
+
+        try {
+            ByteBuffer buffer = CustomSerializer.serialize(response);
+
+            bufferedOutput.offer(buffer);
+        } catch (IOException e) {
+            disconnect();
+        }
     }
 
     /**
      * @return {@code true}, если соединение разорвано
      */
     public synchronized boolean isDisconnected() {
-        return getState() instanceof DisconnectedState;
+        return isDisconnected;
     }
 
     /**
@@ -96,7 +160,7 @@ public class ClientConnection implements Closeable {
     /**
      * @return текущее состояние соединения.
      */
-    public synchronized ConnectionState getState() {
+    public synchronized ReadLoopState getState() {
         return state;
     }
 
@@ -105,7 +169,7 @@ public class ClientConnection implements Closeable {
      *
      * @param state Новое состояние
      */
-    public synchronized void setState(ConnectionState state) {
+    public synchronized void setState(ReadLoopState state) {
         this.state = state;
     }
 
@@ -113,7 +177,7 @@ public class ClientConnection implements Closeable {
      * Разрывает соединение с клиентом.
      */
     public synchronized void disconnect() {
-        setState(new DisconnectedState(this));
+        isDisconnected = true;
     }
 
     @Override
