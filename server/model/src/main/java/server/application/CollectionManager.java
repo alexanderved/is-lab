@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import common.domain.Organization;
 import common.domain.OrganizationTemplate;
@@ -19,8 +20,8 @@ import common.utils.validators.OrganizationCollectionValidator;
 /**
  * Класс, оперирующий коллекцией организаций.
  */
-// TODO: Replace `synchronized` with another method from the task
 public class CollectionManager {
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private final HashSet<Organization> collection;
     private final IDGenerator idGen;
     private final Repository repo;
@@ -73,42 +74,72 @@ public class CollectionManager {
     /**
      * @return размер управляемой коллекции
      */
-    public synchronized int getCollectionSize() {
-        return collection.size();
+    public int getCollectionSize() {
+        try {
+            lock.readLock().lock();
+
+            return collection.size();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
      * @return время инициализации управляемой коллекции
      */
-    public synchronized ZonedDateTime getInitDate() {
+    public ZonedDateTime getInitDate() {
         return initDate;
     }
 
     /**
      * @return время модификации управляемой коллекции
      */
-    public synchronized ZonedDateTime getLastModDate() {
-        return lastModDate;
+    public ZonedDateTime getLastModDate() {
+        try {
+            lock.readLock().lock();
+
+            return lastModDate;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
-    private synchronized void updateLastModDate() {
-        lastModDate = ZonedDateTime.now();
+    private void updateLastModDate() {
+        try {
+            lock.writeLock().lock();
+
+            lastModDate = ZonedDateTime.now();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     /**
      * @return тип управляемой коллекции
      */
-    public synchronized String getCollectionType() {
-        return collection.getClass().getName();
+    public String getCollectionType() {
+        try {
+            lock.readLock().lock();
+
+            return collection.getClass().getName();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
      * @return коллекцию, элементы которой отсортированы по имени
      */
-    public synchronized List<Organization> getSortedCollection() {
-        return collection.stream()
-                .sorted((a, b) -> a.getName().compareTo(b.getName()))
-                .toList();
+    public List<Organization> getSortedCollection() {
+        try {
+            lock.readLock().lock();
+
+            return collection.stream()
+                    .sorted((a, b) -> a.getName().compareTo(b.getName()))
+                    .toList();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
@@ -119,20 +150,26 @@ public class CollectionManager {
      * @throws CollectionOperationFailedException если не удалось изменить данные в репозитории
      * @see OrganizationTemplate
      */
-    public synchronized int add(OrganizationTemplate template)
+    public int add(OrganizationTemplate template)
             throws CollectionOperationFailedException {
-        int newId = idGen.generateID();
-        Organization org = new Organization(newId, template);
         try {
-            repo.add(org);
-        } catch (RepositoryAccessFailedException e) {
-            throw new CollectionOperationFailedException(e);
+            lock.writeLock().lock();
+
+            int newId = idGen.generateID();
+            Organization org = new Organization(newId, template);
+            try {
+                repo.add(org);
+            } catch (RepositoryAccessFailedException e) {
+                throw new CollectionOperationFailedException(e);
+            }
+
+            collection.add(org);
+            updateLastModDate();
+
+            return newId;
+        } finally {
+            lock.writeLock().unlock();
         }
-
-        collection.add(org);
-        updateLastModDate();
-
-        return newId;
     }
 
     /**
@@ -141,20 +178,26 @@ public class CollectionManager {
      * @return {@code true}, если элемент с данным ID присутствовал в коллекции
      * @throws CollectionOperationFailedException если не удалось изменить данные в репозитории
      */
-    public synchronized boolean removeById(int id) throws CollectionOperationFailedException {
+    public boolean removeById(int id) throws CollectionOperationFailedException {
         try {
-            repo.remove(id);
-        } catch (RepositoryAccessFailedException e) {
-            throw new CollectionOperationFailedException(e);
+            lock.writeLock().lock();
+
+            try {
+                repo.remove(id);
+            } catch (RepositoryAccessFailedException e) {
+                throw new CollectionOperationFailedException(e);
+            }
+
+            if (collection.removeIf((org) -> org.getId() == id)) {
+                updateLastModDate();
+
+                return true;
+            }
+
+            return false;
+        } finally {
+            lock.writeLock().unlock();
         }
-
-        if (collection.removeIf((org) -> org.getId() == id)) {
-            updateLastModDate();
-
-            return true;
-        }
-
-        return false;
     }
 
     /**
@@ -164,19 +207,25 @@ public class CollectionManager {
      *                 сравнение элементов коллекции
      * @see OrganizationTemplate
      */
-    public synchronized void removeLower(OrganizationTemplate template) {
-        List<Integer> removedIds = collection.stream()
-                .filter((org) -> template.compareTo(org) > 0)
-                .map(Organization::getId)
-                .toList();
+    public void removeLower(OrganizationTemplate template) {
+        try {
+            lock.writeLock().lock();
 
-        removedIds.forEach((id) -> {
-                    try {
-                        removeById(id);
-                    } catch (CollectionOperationFailedException e) {
-                        Logger.getGlobal().warn("Не удалось удалить организацию с id = " + id, e);
-                    }
-                });
+            List<Integer> removedIds = collection.stream()
+                    .filter((org) -> template.compareTo(org) > 0)
+                    .map(Organization::getId)
+                    .toList();
+
+            removedIds.forEach((id) -> {
+                try {
+                    removeById(id);
+                } catch (CollectionOperationFailedException e) {
+                    Logger.getGlobal().warn("Не удалось удалить организацию с id = " + id, e);
+                }
+            });
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     /**
@@ -186,25 +235,31 @@ public class CollectionManager {
      * @return {@code true}, если элемент с данным ID присутствует в коллекции
      * @throws CollectionOperationFailedException если не удалось изменить данные в репозитории
      */
-    public synchronized boolean update(int id, OrganizationTemplate template)
+    public boolean update(int id, OrganizationTemplate template)
             throws CollectionOperationFailedException {
         try {
-            repo.update(id, template);
-        } catch (RepositoryAccessFailedException e) {
-            throw new CollectionOperationFailedException(e);
+            lock.writeLock().lock();
+
+            try {
+                repo.update(id, template);
+            } catch (RepositoryAccessFailedException e) {
+                throw new CollectionOperationFailedException(e);
+            }
+
+            Optional<Organization> org = collection.stream()
+                    .filter((o) -> o.getId() == id)
+                    .findFirst();
+
+            if (org.isEmpty()) {
+                return false;
+            }
+            org.get().update(template);
+            updateLastModDate();
+
+            return true;
+        } finally {
+            lock.writeLock().unlock();
         }
-
-        Optional<Organization> org = collection.stream()
-            .filter((o) -> o.getId() == id)
-            .findFirst();
-
-        if (org.isEmpty()) {
-            return false;
-        }
-        org.get().update(template);
-        updateLastModDate();
-
-        return true;
     }
 
     /**
@@ -212,58 +267,88 @@ public class CollectionManager {
      *
      * @throws CollectionOperationFailedException если не удалось изменить данные в репозитории
      */
-    public synchronized void clear() throws CollectionOperationFailedException {
+    public void clear() throws CollectionOperationFailedException {
         try {
-            repo.clear();
-        } catch (RepositoryAccessFailedException e) {
-            throw new CollectionOperationFailedException(e);
-        }
+            lock.writeLock().lock();
 
-        collection.clear();
-        updateLastModDate();
+            try {
+                repo.clear();
+            } catch (RepositoryAccessFailedException e) {
+                throw new CollectionOperationFailedException(e);
+            }
+
+            collection.clear();
+            updateLastModDate();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     /**
      * @return наибольший элемент коллекции
      * @see Organization
      */
-    public synchronized Organization max() {
-        return collection.stream()
-            .max(Organization::compareTo)
-            .orElse(null);
+    public Organization max() {
+        try {
+            lock.readLock().lock();
+
+            return collection.stream()
+                    .max(Organization::compareTo)
+                    .orElse(null);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
      * @return наименьший элемент коллекции
      * @see Organization
      */
-    public synchronized Organization min() {
-        return collection.stream()
-            .min(Organization::compareTo)
-            .orElse(null);
+    public Organization min() {
+        try {
+            lock.readLock().lock();
+
+            return collection.stream()
+                    .min(Organization::compareTo)
+                    .orElse(null);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
      * @return среднее арифметическое количеств сотрудников каждой из организаций
      */
-    public synchronized int averageOfEmployeesCount() {
-        int nbOrgs = getCollectionSize();
-        if (nbOrgs == 0) {
-            return 0;
-        }
+    public int averageOfEmployeesCount() {
+        try {
+            lock.readLock().lock();
 
-        return collection.stream()
-            .map(Organization::getEmployeesCount)
-            .reduce(0, Integer::sum) / nbOrgs;
+            int nbOrgs = getCollectionSize();
+            if (nbOrgs == 0) {
+                return 0;
+            }
+
+            return collection.stream()
+                    .map(Organization::getEmployeesCount)
+                    .reduce(0, Integer::sum) / nbOrgs;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
      * @return список годовых оборотов всех организаций
      */
-    public synchronized List<Float> getAnnualTurnovers() {
-        return collection.stream()
-            .map(Organization::getAnnualTurnover)
-            .filter(Objects::nonNull)
-            .toList();
+    public List<Float> getAnnualTurnovers() {
+        try {
+            lock.readLock().lock();
+
+            return collection.stream()
+                    .map(Organization::getAnnualTurnover)
+                    .filter(Objects::nonNull)
+                    .toList();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 }
