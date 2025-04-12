@@ -9,6 +9,9 @@ import server.exceptions.UnsupportedRequestException;
 import server.logger.Logger;
 import server.network.connections.ClientConnection;
 import server.network.providers.ConnectionProvider;
+import server.utils.TaskThreadFactory;
+
+import java.util.concurrent.ExecutorService;
 
 /**
  * Класс, выступающий посредником между соединениями с клиентами и исполнителями запросов.
@@ -16,12 +19,13 @@ import server.network.providers.ConnectionProvider;
 public class ClientResponder {
     private final ConnectionProvider provider;
     private final RequestExecutor reqExecutor;
+    private final TaskThreadFactory execService;
 
     /**
      * @param provider Провайдер соединений с клиентами
      * @param reqExecutor Исполнитель запросов
      */
-    public ClientResponder(ConnectionProvider provider, RequestExecutor reqExecutor) {
+    public ClientResponder(ConnectionProvider provider, RequestExecutor reqExecutor, TaskThreadFactory execService) {
         if (provider == null) {
             throw new IllegalArgumentException(
                     "`provider` не должно быть null");
@@ -33,6 +37,12 @@ public class ClientResponder {
                     "`reqExecutor` не должно быть null");
         }
         this.reqExecutor = reqExecutor;
+
+        if (execService == null) {
+            throw new IllegalArgumentException(
+                    "`execService` не должно быть null");
+        }
+        this.execService = execService;
     }
 
     /**
@@ -48,7 +58,7 @@ public class ClientResponder {
             it.remove();
 
             NetworkRequest req = c.pollRequest();
-            new Thread(() -> {
+            execService.submit(() -> {
                 try {
                     NetworkResponse res = reqExecutor.execute(req, runner);
                     Logger.getGlobal().info("Выполнен запрос `" + req.getName() + "`");
@@ -60,7 +70,7 @@ public class ClientResponder {
 
                     c.offerResponse(new ErrorResponse(reqException.getMessage()));
                 }
-            }).start();
+            });
         }
     }
 }

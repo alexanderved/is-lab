@@ -1,6 +1,7 @@
 package server.network.connections;
 
 import server.logger.Logger;
+import server.utils.TaskThreadFactory;
 
 import java.util.concurrent.ExecutorService;
 
@@ -8,14 +9,14 @@ import java.util.concurrent.ExecutorService;
  * Исполнитель задач чтения-записи
  */
 public class TaskExecutor {
-    private final ExecutorService readExec;
-    private final ExecutorService writeExec;
+    private final TaskThreadFactory readExec;
+    private final TaskThreadFactory writeExec;
 
     /**
      * @param readExec исполнитель задач чтения
      * @param writeExec исполнитель задач записи
      */
-    public TaskExecutor(ExecutorService readExec, ExecutorService writeExec) {
+    public TaskExecutor(TaskThreadFactory readExec, TaskThreadFactory writeExec) {
         this.readExec = readExec;
         this.writeExec = writeExec;
     }
