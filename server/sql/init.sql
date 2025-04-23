@@ -21,9 +21,16 @@ CREATE TYPE organization_type AS ENUM (
     'OPEN_JOINT_STOCK_COMPANY'
 );
 
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    name text UNIQUE NOT NULL CHECK(LENGTH(name) > 0),
+    password_hash varchar(128) NOT NULL,
+    salt varchar(24) NOT NULL
+);
+
 CREATE SEQUENCE IF NOT EXISTS organization_id_generator AS integer START WITH 1;
 
-CREATE TABLE IF NOT EXISTS organizations(
+CREATE TABLE IF NOT EXISTS organizations (
     id integer PRIMARY KEY CHECK(id > 0),
     name text NOT NULL CHECK(LENGTH(name) > 0),
     coordinates coordinates NOT NULL,
@@ -34,5 +41,6 @@ CREATE TABLE IF NOT EXISTS organizations(
     type organization_type NOT NULL,
     street text CHECK(LENGTH(street) > 0),
     town location,
+    user_id integer REFERENCES users(id),
     CHECK ((street IS NULL) = (town IS NULL))
 );

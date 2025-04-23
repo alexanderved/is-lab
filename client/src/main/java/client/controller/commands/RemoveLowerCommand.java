@@ -36,7 +36,7 @@ public class RemoveLowerCommand extends Command {
 
     @Override
     public void execute() throws NetworkCommunicationFailedException {
-        NetworkRequest req = new RemoveLowerRequest(template);
+        NetworkRequest req = new RemoveLowerRequest(runner.getUser(), template);
         NetworkResponse res = runner.getServerConnection().request(req);
 
         if (res instanceof ErrorResponse) {

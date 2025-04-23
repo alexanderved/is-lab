@@ -2,6 +2,7 @@ package server.controller;
 
 import common.exceptions.NetworkCommunicationFailedException;
 import server.application.CollectionManager;
+import server.application.UserManager;
 import server.logger.Logger;
 
 /**
@@ -10,14 +11,21 @@ import server.logger.Logger;
 public class Runner {
     private State state = State.STOPPED;
     private final ClientResponder responder;
+    private final UserManager userManager;
     private final CollectionManager collectionManager;
 
-    public Runner(ClientResponder responder, CollectionManager collectionManager) {
+    public Runner(ClientResponder responder, UserManager userManager, CollectionManager collectionManager) {
         if (responder == null) {
             throw new IllegalArgumentException(
                     "`responder`не должно быть null");
         }
         this.responder = responder;
+
+        if (userManager == null) {
+            throw new IllegalArgumentException(
+                    "`userManager`не должно быть null");
+        }
+        this.userManager = userManager;
 
         if (collectionManager == null) {
             throw new IllegalArgumentException(
@@ -32,6 +40,14 @@ public class Runner {
      */
     public CollectionManager getCollectionManager() {
         return collectionManager;
+    }
+
+    /**
+     * @return менеджер пользователей
+     * @see UserManager
+     */
+    public UserManager getUserManager() {
+        return userManager;
     }
 
     /**

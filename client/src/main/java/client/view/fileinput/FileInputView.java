@@ -13,6 +13,10 @@ import client.exceptions.UnexpectedEODException;
 import client.view.View;
 import client.view.inputrequests.InputRequest;
 import client.view.inputrequests.InputRequestFactory;
+import common.exceptions.InvalidFieldFormatException;
+import client.controller.user.LoggedOutUser;
+import client.controller.user.UnauthorizedUser;
+import client.controller.user.UnregisteredUser;
 
 /**
  * Представление, в котором данные вводятся из файла.
@@ -33,6 +37,27 @@ public class FileInputView extends View implements Closeable {
     }
 
     @Override
+    public UnauthorizedUser auth()
+            throws InvalidFieldFormatException, InputDeniedException, InputFailedException, UnexpectedEODException {
+        String doRegistration = input();
+
+        String username = input();
+        String password = input();
+
+        if (doRegistration.equalsIgnoreCase("y")) {
+            String passwordConfirmation = input();
+
+            if (!password.equals(passwordConfirmation)) {
+                throw new InputFailedException("Пароль и подтверждение пароля должны совпадать");
+            }
+
+            return new UnregisteredUser(username, password);
+        }
+
+        return new LoggedOutUser(username, password);
+    }
+
+    @Override
     public void output(String msg) {
         view.output(msg);
     }
@@ -49,7 +74,7 @@ public class FileInputView extends View implements Closeable {
         try {
             line = reader.readLine();
         } catch (EOFException e) {
-            line = null;
+            throw new UnexpectedEODException();
         } catch (IOException e) {
             throw new InputDeniedException(e.getMessage());
         }

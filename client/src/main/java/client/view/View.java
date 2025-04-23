@@ -5,11 +5,25 @@ import client.exceptions.InputFailedException;
 import client.exceptions.UnexpectedEODException;
 import client.view.inputrequests.InputRequest;
 import client.view.inputrequests.InputRequestFactory;
+import common.exceptions.InvalidFieldFormatException;
+import client.controller.user.UnauthorizedUser;
 
 /**
  * Пользовательское представление.
  */
 public abstract class View {
+    /**
+     * Осуществляет вход пользователя.
+     *
+     * @return неавторизованного пользователя
+     * @throws InputDeniedException   если не удалось запросить данные
+     * @throws InputFailedException   если в процессе ввода возникла ошибка
+     * @throws UnexpectedEODException если данные перестали поступать до окончания
+     *                                запроса
+     */
+    public abstract UnauthorizedUser auth()
+            throws InvalidFieldFormatException, InputDeniedException, InputFailedException, UnexpectedEODException;
+
     /**
      * Выводит сообщение для пользователя.
      * 

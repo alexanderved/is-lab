@@ -20,8 +20,8 @@ public class RemoveByIDRequestExecutor extends RequestExecutor {
 
         RemoveByIDRequest removeReq = (RemoveByIDRequest) req;
         try {
-            if (!runner.getCollectionManager().removeById(removeReq.getID())) {
-                return new FailureResponse("Не удалось найти элемент с данным ID");
+            if (!runner.getCollectionManager().removeById(removeReq.getUser(), removeReq.getID())) {
+                return new FailureResponse("Не удалось удалить элемент с данным ID");
             }
         } catch (CollectionOperationFailedException e) {
             return new ErrorResponse("Не удалось удалить элемент с данным ID");

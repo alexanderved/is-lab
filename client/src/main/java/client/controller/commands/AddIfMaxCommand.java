@@ -37,7 +37,7 @@ public class AddIfMaxCommand extends Command {
 
     @Override
     public void execute() throws NetworkCommunicationFailedException {
-        NetworkRequest req = new AddIfMaxRequest(template);
+        NetworkRequest req = new AddIfMaxRequest(runner.getUser(), template);
         NetworkResponse res = runner.getServerConnection().request(req);
 
         if (res instanceof ErrorResponse) {

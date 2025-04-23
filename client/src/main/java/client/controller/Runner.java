@@ -2,6 +2,8 @@ package client.controller;
 
 import client.controller.commands.Command;
 import client.controller.commands.CommandParser;
+import client.controller.user.UnauthorizedUser;
+import client.exceptions.AuthFailedException;
 import client.exceptions.InputDeniedException;
 import client.exceptions.InputFailedException;
 import client.exceptions.UnexpectedEODException;
@@ -9,18 +11,27 @@ import client.network.ServerConnection;
 import client.view.View;
 import client.view.inputrequests.CommandInputRequest;
 import client.view.inputrequests.InputRequestFactory;
+import common.domain.User;
+import common.exceptions.InvalidFieldFormatException;
 import common.exceptions.NetworkCommunicationFailedException;
+import common.exceptions.UserNameAlreadyTakenException;
+import common.exceptions.UserNotFoundException;
 
 /**
  * Исполнитель пользовательских команд.
  */
 public class Runner {
     private State state = State.STOPPED;
-    private View view;
-    private ServerConnection serverConnection;
-    private CommandParser cmdParser;
+    private final View view;
+    private final ServerConnection serverConnection;
+    private final CommandParser cmdParser;
+    private User user;
 
     public Runner(View view, ServerConnection serverConnection, CommandParser cmdParser) {
+        this(view, serverConnection, cmdParser, null);
+    }
+
+    public Runner(View view, ServerConnection serverConnection, CommandParser cmdParser, User user) {
         if (view == null) {
             throw new IllegalArgumentException(
                     "`view` в классе `Runner` не должно быть null");
@@ -38,7 +49,7 @@ public class Runner {
                     "`cmdParser` в классе `Runner` не должно быть null");
         }
         this.cmdParser = cmdParser;
-
+        this.user = user;
     }
 
     /**
@@ -50,37 +61,11 @@ public class Runner {
     }
 
     /**
-     * Устанавливает представление, из которого поступают команды.
-     * @param view представление, из которого поступают команды
-     * @see View
-     */
-    public void setView(View view) {
-        if (view == null) {
-            throw new IllegalArgumentException(
-                    "`view` в классе `Runner` не должно быть null");
-        }
-
-        this.view = view;
-    }
-
-    /**
      * @return соединение с сервером, выполняющим команды
      * @see ServerConnection
      */
     public ServerConnection getServerConnection() {
         return serverConnection;
-    }
-
-    /**
-     * Устанавливает соединение с сервером, выполняющим команды.
-     * @param serverConnection Соединение с сервером, выполняющим команды
-     */
-    public void setServerConnection(ServerConnection serverConnection) {
-        if (serverConnection == null) {
-            throw new IllegalArgumentException(
-                    "`serverConnection` в классе `Runner` не должно быть null");
-        }
-        this.serverConnection = serverConnection;
     }
 
     /**
@@ -91,15 +76,10 @@ public class Runner {
     }
 
     /**
-     * Устанавливает парсер команд пользователя.
-     * @param cmdParser Парсер команд
+     * @return пользователя клиента или {@code null}, если пользователь не аутентифицирован
      */
-    public void setCommandParser(CommandParser cmdParser) {
-        if (cmdParser == null) {
-            throw new IllegalArgumentException(
-                    "`cmdParser` в классе `Runner` не должно быть null");
-        }
-        this.cmdParser = cmdParser;
+    public User getUser() {
+        return user;
     }
 
     /**
@@ -110,6 +90,24 @@ public class Runner {
 
         InputRequestFactory inReqFactory = view.getInputRequestFactory();
         while (getState() == State.RUNNING) {
+            if (user == null) {
+                try {
+                    UnauthorizedUser unauthUser = view.auth();
+                    user = unauthUser.auth(this);
+                } catch (InvalidFieldFormatException | InputDeniedException
+                         | InputFailedException | UnexpectedEODException
+                         | NetworkCommunicationFailedException | AuthFailedException e) {
+                    view.error("Не удалось произвести аутентификацию пользователя: " + e.getMessage());
+                    stop();
+
+                    return;
+                } catch (UserNotFoundException | UserNameAlreadyTakenException e) {
+                    view.error(e.getMessage());
+
+                    continue;
+                }
+            }
+
             try {
                 CommandInputRequest cmdInReq = inReqFactory.createCommandInputRequest(this);
                 Command cmd = view.input(cmdInReq);

@@ -21,7 +21,7 @@ class OptionalDataInputRequest<T> extends client.view.inputrequests.OptionalData
 
     @Override
     public T request() throws InputDeniedException, InputFailedException, UnexpectedEODException {
-        String ans = cli.input("Желаете указать " + req.getRequestText() + " (y/n[default])? ");
+        String ans = cli.input("Желаете указать " + req.getRequestText() + " (y/N)? ");
         
         return ans.equals("y") ? cli.input(req) : null;
     }    

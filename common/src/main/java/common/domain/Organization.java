@@ -24,13 +24,15 @@ public final class Organization implements Validatable, Comparable<Organization>
     private OrganizationType type; // Поле не может быть null
     private Address officialAddress; // Поле может быть null
 
+    private int userId;
+
     /**
      * Конструктор организации, в котором датой создания устанавливается данный момент времени.
      * @param id ID организации
      * @param template Шаблон организации
      */
-    public Organization(int id, OrganizationTemplate template) {
-        this(id, ZonedDateTime.now(), template);
+    public Organization(int id, int userId, OrganizationTemplate template) {
+        this(id, ZonedDateTime.now(), userId, template);
     }
 
     /**
@@ -38,7 +40,7 @@ public final class Organization implements Validatable, Comparable<Organization>
      * @param creationDate Дата создания организации
      * @param template Шаблон организации
      */
-    public Organization(int id, ZonedDateTime creationDate, OrganizationTemplate template) {
+    public Organization(int id, ZonedDateTime creationDate, int userId, OrganizationTemplate template) {
         if (id <= 0) {
             throw new IllegalArgumentException("Поле `id` класса `Organization`"
                 + " должно быть больше 0");
@@ -58,6 +60,7 @@ public final class Organization implements Validatable, Comparable<Organization>
         employeesCount = template.getEmployeesCount();
         type = template.getType();
         officialAddress = template.getOfficialAddress();
+        this.userId = userId;
     }
 
     /**
@@ -135,6 +138,13 @@ public final class Organization implements Validatable, Comparable<Organization>
      */
     public Address getOfficialAddress() {
         return officialAddress;
+    }
+
+    /**
+     * @return ID пользователя, добавившего организацию
+     */
+    public int getUserID() {
+        return userId;
     }
 
     @Override

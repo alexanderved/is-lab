@@ -23,7 +23,7 @@ public final class ClearCommand extends Command {
 
     @Override
     public void execute() throws NetworkCommunicationFailedException {
-        NetworkRequest req = new ClearRequest();
+        NetworkRequest req = new ClearRequest(runner.getUser());
         NetworkResponse res = runner.getServerConnection().request(req);
 
         if (res instanceof ErrorResponse) {

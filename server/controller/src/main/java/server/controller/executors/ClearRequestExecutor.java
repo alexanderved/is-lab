@@ -19,7 +19,7 @@ public class ClearRequestExecutor extends RequestExecutor {
         }
 
         try {
-            runner.getCollectionManager().clear();
+            runner.getCollectionManager().clear(((ClearRequest) req).getUser());
         } catch (CollectionOperationFailedException e) {
             return new ErrorResponse("Не удалось очистить коллекцию");
         }

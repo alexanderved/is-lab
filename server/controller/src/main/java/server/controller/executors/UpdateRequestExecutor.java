@@ -24,8 +24,8 @@ public class UpdateRequestExecutor extends RequestExecutor {
         OrganizationTemplate template = updateReq.getOrganizationTemplate();
 
         try {
-            if (!runner.getCollectionManager().update(id, template)) {
-                return new FailureResponse("Не удалось найти элемент с данным ID");
+            if (!runner.getCollectionManager().update(updateReq.getUser(),id, template)) {
+                return new FailureResponse("Не удалось обновить элемент с данным ID");
             }
         } catch (CollectionOperationFailedException e) {
             return new ErrorResponse("Не удалось обновить элемент с данным ID");

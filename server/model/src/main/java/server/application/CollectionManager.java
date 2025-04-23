@@ -9,10 +9,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import common.domain.Organization;
 import common.domain.OrganizationTemplate;
-import server.exceptions.CollectionOperationFailedException;
-import server.exceptions.RepositoryAccessDeniedException;
-import server.exceptions.RepositoryAccessFailedException;
-import server.exceptions.RepositoryDataCorruptedException;
+import common.domain.User;
+import common.exceptions.UserNotFoundException;
+import server.exceptions.*;
 import server.logger.Logger;
 import server.repository.Repository;
 import common.utils.validators.OrganizationCollectionValidator;
@@ -25,12 +24,14 @@ public class CollectionManager {
     private final HashSet<Organization> collection;
     private final IDGenerator idGen;
     private final Repository repo;
+    private final UserManager userManager;
     private final ZonedDateTime initDate;
     private ZonedDateTime lastModDate;
 
     /**
      * @param idGen Генератор ID для добавляемых в коллекцию организаций
      * @param repo Репозиторий организаций
+     * @param userManager Класс, управляющий данными пользователей
      * @throws RepositoryAccessDeniedException если не удается получить
      *                                         доступ к репозиторию
      * @throws RepositoryDataCorruptedException если данные в репозитории не соответствуют
@@ -38,7 +39,7 @@ public class CollectionManager {
      * @see IDGenerator
      * @see Repository
      */
-    public CollectionManager(IDGenerator idGen, Repository repo)
+    public CollectionManager(IDGenerator idGen, Repository repo, UserManager userManager)
         throws RepositoryAccessDeniedException, RepositoryDataCorruptedException
     {
         if (idGen == null) {
@@ -52,6 +53,12 @@ public class CollectionManager {
                     "`repo` в классе `CollectionManager` не должно быть null");
         }
         this.repo = repo;
+
+        if (userManager == null) {
+            throw new IllegalArgumentException(
+                    "`userManager` в классе `CollectionManager` не должно быть null");
+        }
+        this.userManager = userManager;
 
         collection = loadCollection(repo, idGen);
         initDate = ZonedDateTime.now();
@@ -139,18 +146,26 @@ public class CollectionManager {
 
     /**
      * Добавляет в коллекцию новую организацию, созданную по шаблону.
-     * 
+     *
+     * @param user     Пользователь, выполняющий операцию
      * @param template Шаблон новой организации
      * @return ID новой организации
      * @throws CollectionOperationFailedException если не удалось изменить данные в репозитории
      * @see OrganizationTemplate
      */
-    public int add(OrganizationTemplate template)
+    public int add(User user, OrganizationTemplate template)
             throws CollectionOperationFailedException {
         lock.writeLock().lock();
         try {
+            int userId;
+            try {
+                userId = userManager.getUserID(user);
+            } catch (UserNotFoundException | UserDBAccessFailedException e) {
+                throw new CollectionOperationFailedException(e);
+            }
+
             int newId = idGen.generateID();
-            Organization org = new Organization(newId, template);
+            Organization org = new Organization(newId, userId, template);
             try {
                 repo.add(org);
             } catch (RepositoryAccessFailedException e) {
@@ -168,26 +183,43 @@ public class CollectionManager {
 
     /**
      * Удаляет организацию из коллекции по ее ID.
-     * @param id ID организации, которую нужно удалить
+     *
+     * @param user Пользователь, выполняющий операцию
+     * @param id   ID организации, которую нужно удалить
      * @return {@code true}, если элемент с данным ID присутствовал в коллекции
      * @throws CollectionOperationFailedException если не удалось изменить данные в репозитории
      */
-    public boolean removeById(int id) throws CollectionOperationFailedException {
+    public boolean removeById(User user, int id) throws CollectionOperationFailedException {
         lock.writeLock().lock();
         try {
+            int userId;
             try {
-                repo.remove(id);
+                userId = userManager.getUserID(user);
+            } catch (UserNotFoundException | UserDBAccessFailedException e) {
+                throw new CollectionOperationFailedException(e);
+            }
+
+            Optional<Organization> removableOrg = collection.stream()
+                    .filter((org) -> org.getId() == id)
+                    .findFirst();
+            if (removableOrg.isEmpty()) {
+                return false;
+            }
+
+            if (removableOrg.get().getUserID() != userId) {
+                return false;
+            }
+
+            try {
+                repo.remove(userId, id);
             } catch (RepositoryAccessFailedException e) {
                 throw new CollectionOperationFailedException(e);
             }
 
-            if (collection.removeIf((org) -> org.getId() == id)) {
-                updateLastModDate();
+            collection.remove(removableOrg.get());
+            updateLastModDate();
 
-                return true;
-            }
-
-            return false;
+            return true;
         } finally {
             lock.writeLock().unlock();
         }
@@ -196,11 +228,13 @@ public class CollectionManager {
     /**
      * Удаляет из коллекции все организации, которые меньше,
      * чем организация, созданная по данному шаблону.
+     *
+     * @param user     Пользователь, выполняющий операцию
      * @param template Шаблон организации, с которой происходит
      *                 сравнение элементов коллекции
      * @see OrganizationTemplate
      */
-    public void removeLower(OrganizationTemplate template) {
+    public void removeLower(User user, OrganizationTemplate template) {
         lock.writeLock().lock();
         try {
             List<Integer> removedIds = collection.stream()
@@ -210,7 +244,7 @@ public class CollectionManager {
 
             removedIds.forEach((id) -> {
                 try {
-                    removeById(id);
+                    removeById(user, id);
                 } catch (CollectionOperationFailedException e) {
                     Logger.getGlobal().warn("Не удалось удалить организацию с id = " + id, e);
                 }
@@ -222,29 +256,42 @@ public class CollectionManager {
 
     /**
      * Обновляет информацию организации с данным ID с использованием данного шаблона.
-     * @param id ID организации, которую нужно обновить
+     *
+     * @param user     Пользователь, выполняющий операцию
+     * @param id       ID организации, которую нужно обновить
      * @param template Шаблон новых данных организации
      * @return {@code true}, если элемент с данным ID присутствует в коллекции
      * @throws CollectionOperationFailedException если не удалось изменить данные в репозитории
      */
-    public boolean update(int id, OrganizationTemplate template)
+    public boolean update(User user, int id, OrganizationTemplate template)
             throws CollectionOperationFailedException {
         lock.writeLock().lock();
         try {
+            int userId;
             try {
-                repo.update(id, template);
+                userId = userManager.getUserID(user);
+            } catch (UserNotFoundException | UserDBAccessFailedException e) {
+                throw new CollectionOperationFailedException(e);
+            }
+
+            Optional<Organization> updatableOrg = collection.stream()
+                    .filter((org) -> org.getId() == id)
+                    .findFirst();
+            if (updatableOrg.isEmpty()) {
+                return false;
+            }
+
+            if (updatableOrg.get().getUserID() != userId) {
+                return false;
+            }
+
+            try {
+                repo.update(userId, id, template);
             } catch (RepositoryAccessFailedException e) {
                 throw new CollectionOperationFailedException(e);
             }
 
-            Optional<Organization> org = collection.stream()
-                    .filter((o) -> o.getId() == id)
-                    .findFirst();
-
-            if (org.isEmpty()) {
-                return false;
-            }
-            org.get().update(template);
+            updatableOrg.get().update(template);
             updateLastModDate();
 
             return true;
@@ -256,19 +303,19 @@ public class CollectionManager {
     /**
      * Очищает коллекцию.
      *
+     * @param user Пользователь, выполняющий операцию
      * @throws CollectionOperationFailedException если не удалось изменить данные в репозитории
      */
-    public void clear() throws CollectionOperationFailedException {
+    public void clear(User user) throws CollectionOperationFailedException {
         lock.writeLock().lock();
         try {
-            try {
-                repo.clear();
-            } catch (RepositoryAccessFailedException e) {
-                throw new CollectionOperationFailedException(e);
-            }
+            int userId = userManager.getUserID(user);
+            repo.clear(userId);
 
-            collection.clear();
+            collection.removeIf((org) -> org.getUserID() == userId);
             updateLastModDate();
+        } catch (UserNotFoundException | UserDBAccessFailedException | RepositoryAccessFailedException e) {
+            throw new CollectionOperationFailedException(e);
         } finally {
             lock.writeLock().unlock();
         }

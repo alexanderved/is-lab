@@ -28,7 +28,7 @@ public class RemoveByIDCommand extends Command {
     
     @Override
     public void execute() throws NetworkCommunicationFailedException {
-        NetworkRequest req = new RemoveByIDRequest(id);
+        NetworkRequest req = new RemoveByIDRequest(runner.getUser(), id);
         NetworkResponse res = runner.getServerConnection().request(req);
 
         if (res instanceof ErrorResponse) {

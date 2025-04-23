@@ -7,7 +7,9 @@ import server.application.IDGenerator;
 import server.application.SQLSequenceIDGenerator;
 import server.exceptions.RepositoryAccessDeniedException;
 import server.exceptions.RepositoryAccessFailedException;
+import common.exceptions.UserNotFoundException;
 import server.logger.Logger;
+import server.repository.HashedUser;
 import server.repository.Repository;
 import server.repository.postgresql.dto.CoordinatesDTO;
 import server.repository.postgresql.dto.LocationDTO;
@@ -23,7 +25,7 @@ import java.time.ZonedDateTime;
 import java.util.HashSet;
 
 public class PostgreSQLRepository extends Repository implements AutoCloseable {
-    Connection connection;
+    private final Connection connection;
 
     public PostgreSQLRepository(String url, String user, String password)
             throws RepositoryAccessDeniedException {
@@ -52,7 +54,8 @@ public class PostgreSQLRepository extends Repository implements AutoCloseable {
                         organizations.employees_count,
                         organizations.type,
                         organizations.street,
-                        organizations.town
+                        organizations.town,
+                        organizations.user_id
                     FROM organizations;
                 """;
 
@@ -86,15 +89,12 @@ public class PostgreSQLRepository extends Repository implements AutoCloseable {
                         templateBuilder.setOfficialAddress(new Address(street, town));
                     }
 
-                    Organization org = new Organization(id, creationDate, templateBuilder.build());
+                    int userId = res.getInt(11);
+
+                    Organization org = new Organization(id, creationDate, userId, templateBuilder.build());
                     orgs.add(org);
                 } catch (InvalidFieldFormatException e) {
                     Logger.getGlobal().warn("Данные организации с id = " + id + " повреждены", e);
-                    try {
-                        remove(id);
-                    } catch (RepositoryAccessFailedException repoAccessEx) {
-                        Logger.getGlobal().warn("Не удалось удалить поврежденные данные", repoAccessEx);
-                    }
                 }
             }
         } catch (SQLException e) {
@@ -102,6 +102,53 @@ public class PostgreSQLRepository extends Repository implements AutoCloseable {
         }
 
         return orgs;
+    }
+
+    @Override
+    public HashedUser getHashedUser(String name) throws RepositoryAccessFailedException, UserNotFoundException {
+        String query = """
+                SELECT users.id, users.password_hash, users.salt
+                    FROM users
+                    WHERE users.name = ?;
+                """;
+
+        try (PreparedStatement p = connection.prepareStatement(query)) {
+            p.setString(1, name);
+
+            ResultSet res = p.executeQuery();
+            if (res.next()) {
+                int id = res.getInt(1);
+                String passwordHash = res.getString(2);
+                String salt = res.getString(3);
+
+                return new HashedUser(id, name, passwordHash, salt);
+            } else {
+                throw new UserNotFoundException();
+            }
+        } catch (SQLException e) {
+            throw new RepositoryAccessFailedException(e);
+        }
+    }
+
+    public void registerUser(String name, String passwordHash, String salt)
+            throws RepositoryAccessFailedException {
+        String query = """
+                INSERT INTO users(
+                    name,
+                    password_hash,
+                    salt
+                ) VALUES (?, ?, ?);
+                """;
+
+        try (PreparedStatement p = connection.prepareStatement(query)) {
+            p.setString(1, name);
+            p.setString(2, passwordHash);
+            p.setString(3, salt);
+
+            p.executeUpdate();
+        } catch (SQLException e) {
+            throw new RepositoryAccessFailedException(e);
+        }
     }
 
     @Override
@@ -117,8 +164,9 @@ public class PostgreSQLRepository extends Repository implements AutoCloseable {
                     employees_count,
                     type,
                     street,
-                    town
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?::organization_type, ?, ?);
+                    town,
+                    user_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?::organization_type, ?, ?, ?);
                 """;
 
         try (PreparedStatement p = connection.prepareStatement(query)) {
@@ -147,6 +195,8 @@ public class PostgreSQLRepository extends Repository implements AutoCloseable {
                         LocationDTO.fromLocation(org.getOfficialAddress().getTown()).toPGobject());
             }
 
+            p.setInt(11, org.getUserID());
+
             p.executeUpdate();
         } catch (SQLException e) {
             throw new RepositoryAccessFailedException(e);
@@ -154,11 +204,12 @@ public class PostgreSQLRepository extends Repository implements AutoCloseable {
     }
 
     @Override
-    public void remove(int id) throws RepositoryAccessFailedException {
-        String query = "DELETE FROM organizations WHERE organizations.id = ?;";
+    public void remove(int userId, int id) throws RepositoryAccessFailedException {
+        String query = "DELETE FROM organizations WHERE organizations.id = ? AND organizations.user_id = ?;";
 
         try (PreparedStatement p = connection.prepareStatement(query)) {
             p.setInt(1, id);
+            p.setInt(2, userId);
             p.executeUpdate();
         } catch (SQLException e) {
             throw new RepositoryAccessFailedException(e);
@@ -166,10 +217,11 @@ public class PostgreSQLRepository extends Repository implements AutoCloseable {
     }
 
     @Override
-    public void clear() throws RepositoryAccessFailedException {
-        String query = "TRUNCATE TABLE organizations;";
+    public void clear(int userId) throws RepositoryAccessFailedException {
+        String query = "DELETE FROM organizations WHERE organizations.user_id = ?;";
 
         try (PreparedStatement p = connection.prepareStatement(query)) {
+            p.setInt(1, userId);
             p.executeUpdate();
         } catch (SQLException e) {
             throw new RepositoryAccessFailedException(e);
@@ -177,7 +229,7 @@ public class PostgreSQLRepository extends Repository implements AutoCloseable {
     }
 
     @Override
-    public void update(int id, OrganizationTemplate template) throws RepositoryAccessFailedException {
+    public void update(int userId, int id, OrganizationTemplate template) throws RepositoryAccessFailedException {
         String query = """
                 UPDATE organizations
                     SET name = ?,
@@ -188,7 +240,7 @@ public class PostgreSQLRepository extends Repository implements AutoCloseable {
                         type = ?::organization_type,
                         street = ?,
                         town = ?
-                    WHERE id = ?;
+                    WHERE id = ? AND user_id = ?;
                 """;
 
         try (PreparedStatement p = connection.prepareStatement(query)) {
@@ -216,6 +268,7 @@ public class PostgreSQLRepository extends Repository implements AutoCloseable {
             }
 
             p.setInt(9, id);
+            p.setInt(10, userId);
 
             p.executeUpdate();
         } catch (SQLException e) {

@@ -16,7 +16,7 @@ public class RemoveLowerRequestExecutor extends RequestExecutor {
         }
 
         RemoveLowerRequest removeReq = (RemoveLowerRequest) req;
-        runner.getCollectionManager().removeLower(removeReq.getOrganizationTemplate());;
+        runner.getCollectionManager().removeLower(removeReq.getUser(),removeReq.getOrganizationTemplate());;
 
         return new SuccessResponse("Удалены все организации, меньшие, чем заданная");
     }

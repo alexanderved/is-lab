@@ -29,7 +29,7 @@ public class ExecuteScriptCommand extends Command {
 
         try (FileInputView fileInputView = new FileInputView(script, runner.getView())) {
             Runner scripRunner = new Runner(
-                fileInputView, runner.getServerConnection(), runner.getCommandParser());
+                fileInputView, runner.getServerConnection(), runner.getCommandParser(), runner.getUser());
             scripRunner.run();
 
             runner.getView().output("Исполнение скрипта `" + script + "` завершено");

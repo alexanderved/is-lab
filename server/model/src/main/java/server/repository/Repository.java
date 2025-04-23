@@ -6,8 +6,7 @@ import common.domain.Organization;
 import common.domain.OrganizationTemplate;
 import server.exceptions.RepositoryAccessDeniedException;
 import server.exceptions.RepositoryAccessFailedException;
-import server.exceptions.RepositoryDataCorruptedException;
-import server.logger.Logger;
+import common.exceptions.UserNotFoundException;
 
 /**
  * Репозиторий данных организаций.
@@ -21,8 +20,11 @@ public abstract class Repository {
      *                                          репозиторию
      */
     public abstract HashSet<Organization> load() throws RepositoryAccessDeniedException;
+    public abstract HashedUser getHashedUser(String name) throws RepositoryAccessFailedException, UserNotFoundException;
+    public abstract void registerUser(String name, String passwordHash, String salt)
+            throws RepositoryAccessFailedException;
     public abstract void add(Organization org) throws RepositoryAccessFailedException;
-    public abstract void remove(int id) throws RepositoryAccessFailedException;
-    public abstract void clear() throws RepositoryAccessFailedException;
-    public abstract void update(int id, OrganizationTemplate template) throws RepositoryAccessFailedException;
+    public abstract void remove(int userId, int id) throws RepositoryAccessFailedException;
+    public abstract void clear(int userId) throws RepositoryAccessFailedException;
+    public abstract void update(int userId, int id, OrganizationTemplate template) throws RepositoryAccessFailedException;
 }

@@ -5,6 +5,7 @@ import common.network.requests.NetworkRequest;
 import common.network.responses.ErrorResponse;
 import common.network.responses.NetworkResponse;
 import server.controller.executors.RequestExecutor;
+import server.exceptions.UnauthorizedRequestException;
 import server.exceptions.UnsupportedRequestException;
 import server.logger.Logger;
 import server.network.connections.ClientConnection;
@@ -57,20 +58,24 @@ public class ClientResponder {
             ClientConnection c = it.next();
             it.remove();
 
-            NetworkRequest req = c.pollRequest();
-            execService.submit(() -> {
-                try {
-                    NetworkResponse res = reqExecutor.execute(req, runner);
-                    Logger.getGlobal().info("Выполнен запрос `" + req.getName() + "`");
+            try {
+                NetworkRequest req = c.pollRequest();
+                execService.submit(() -> {
+                    try {
+                        NetworkResponse res = reqExecutor.execute(req, runner);
+                        Logger.getGlobal().info("Выполнен запрос `" + req.getName() + "`");
 
-                    c.offerResponse(res);
-                } catch (UnsupportedRequestException reqException) {
-                    Logger.getGlobal().warn("В процессе выполнения запроса `" + req.getName()
-                            + "` произошла ошибка");
+                        c.offerResponse(res);
+                    } catch (UnsupportedRequestException reqException) {
+                        Logger.getGlobal().warn("В процессе выполнения запроса `" + req.getName()
+                                + "` произошла ошибка");
 
-                    c.offerResponse(new ErrorResponse(reqException.getMessage()));
-                }
-            });
+                        c.offerResponse(new ErrorResponse(reqException.getMessage()));
+                    }
+                });
+            } catch (UnauthorizedRequestException e) {
+                Logger.getGlobal().warn("Неавторизированный запрос к серверу");
+            }
         }
     }
 }

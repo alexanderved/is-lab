@@ -2,6 +2,7 @@ package client.controller.commands;
 
 import client.controller.Runner;
 import common.domain.OrganizationTemplate;
+import common.domain.User;
 import common.exceptions.NetworkCommunicationFailedException;
 import common.network.requests.AddRequest;
 import common.network.requests.NetworkRequest;
@@ -30,13 +31,12 @@ public class AddCommand extends Command {
         if (template == null) {
             throw new IllegalArgumentException("Поле `template` не может быть null");
         }
-
         this.template = template;
     }
 
     @Override
     public void execute() throws NetworkCommunicationFailedException {
-        NetworkRequest req = new AddRequest(template);
+        NetworkRequest req = new AddRequest(runner.getUser(), template);
         NetworkResponse res = runner.getServerConnection().request(req);
 
         if (res instanceof ErrorResponse) {

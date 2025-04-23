@@ -5,27 +5,18 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.*;
 
 import server.application.CollectionManager;
 import server.application.IDGenerator;
+import server.application.SHA512Hasher;
+import server.application.UserManager;
 import server.controller.ClientResponder;
 import server.controller.Runner;
-import server.controller.executors.AddIfMaxRequestExecutor;
-import server.controller.executors.AddIfMinRequestExecutor;
-import server.controller.executors.AddRequestExecutor;
-import server.controller.executors.AverageOfEmployeesCountRequestExecutor;
-import server.controller.executors.ClearRequestExecutor;
-import server.controller.executors.FilterStartsWithFullNameRequestExecutor;
-import server.controller.executors.GeneralRequestExecutor;
-import server.controller.executors.InfoRequestExecutor;
-import server.controller.executors.PrintFieldDescendingAnnualTurnoverRequestExecutor;
-import server.controller.executors.RemoveByIDRequestExecutor;
-import server.controller.executors.RemoveLowerRequestExecutor;
-import server.controller.executors.ShowRequestExecutor;
-import server.controller.executors.UpdateRequestExecutor;
+import server.controller.executors.*;
 import server.exceptions.RepositoryAccessDeniedException;
 import server.exceptions.RepositoryDataCorruptedException;
 import server.logger.Logger;
@@ -38,7 +29,7 @@ public class Main {
     public static final int PORT = 4891;
     
     public static void main(String[] args)
-            throws UnknownHostException, RepositoryAccessDeniedException {
+            throws UnknownHostException, RepositoryAccessDeniedException, NoSuchAlgorithmException {
         PostgreSQLRepository repo = new PostgreSQLRepository(
                 "localhost:5432/studs", "alex", "");
 
@@ -55,10 +46,12 @@ public class Main {
             return;
         }
 
+        UserManager userManager = new UserManager(new SHA512Hasher(), repo);
+
         IDGenerator idGen = repo.createIDGenerator();
         CollectionManager collection;
         try {
-            collection = new CollectionManager(idGen, repo);
+            collection = new CollectionManager(idGen, repo, userManager);
         } catch (RepositoryAccessDeniedException | RepositoryDataCorruptedException e) {
             Logger.getGlobal().error(e.toString(), e);
 
@@ -74,7 +67,7 @@ public class Main {
             }
         });
 
-        Runner runner = new Runner(responder, collection);
+        Runner runner = new Runner(responder, userManager, collection);
 
         reqExecutor.register("info", new InfoRequestExecutor());
         reqExecutor.register("show", new ShowRequestExecutor());
@@ -91,6 +84,8 @@ public class Main {
             new FilterStartsWithFullNameRequestExecutor());
         reqExecutor.register("print_field_descending_annual_turnover",
             new PrintFieldDescendingAnnualTurnoverRequestExecutor());
+        reqExecutor.register("login", new LoginRequestExecutor());
+        reqExecutor.register("register", new RegisterRequestExecutor());
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {

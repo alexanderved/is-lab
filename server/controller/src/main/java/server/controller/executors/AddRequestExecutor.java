@@ -19,7 +19,7 @@ public class AddRequestExecutor extends RequestExecutor {
 
         AddRequest addReq = (AddRequest) req;
         try {
-            int newId = runner.getCollectionManager().add(addReq.getOrganizationTemplate());
+            int newId = runner.getCollectionManager().add(addReq.getUser(), addReq.getOrganizationTemplate());
 
             return new AddResponse(newId);
         } catch (CollectionOperationFailedException e) {

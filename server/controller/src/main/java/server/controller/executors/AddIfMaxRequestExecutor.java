@@ -30,7 +30,7 @@ public class AddIfMaxRequestExecutor extends RequestExecutor {
         }
 
         try {
-            return new AddResponse(runner.getCollectionManager().add(template));
+            return new AddResponse(runner.getCollectionManager().add(addReq.getUser(), template));
         } catch (CollectionOperationFailedException e) {
             return new ErrorResponse("Не удалось добавить организацию");
         }

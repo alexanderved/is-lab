@@ -6,7 +6,10 @@ import common.network.Endpoint;
 import common.network.requests.NetworkRequest;
 import common.network.responses.NetworkResponse;
 import common.utils.CustomSerializer;
+import server.exceptions.UnauthorizedRequestException;
 import server.logger.Logger;
+import server.network.connections.pollstrategies.PollStrategy;
+import server.network.connections.pollstrategies.UnauthorizedPollStrategy;
 import server.network.connections.states.*;
 
 import java.io.Closeable;
@@ -21,6 +24,7 @@ import java.util.Queue;
 public class ClientConnection implements Closeable {
     private final TaskExecutor executor;
     private final Endpoint endpoint;
+    private PollStrategy pollStrategy;
     private ReadLoopState state;
     private boolean isDisconnected = false;
 
@@ -33,6 +37,7 @@ public class ClientConnection implements Closeable {
     public ClientConnection(TaskExecutor executor, Endpoint endpoint) {
         this.executor = executor;
         this.endpoint = endpoint;
+        pollStrategy = new UnauthorizedPollStrategy();
         state = new ReadReadyState(this);
     }
 
@@ -89,7 +94,7 @@ public class ClientConnection implements Closeable {
                     try {
                         Logger.getGlobal().info("Отправлен ответ клиенту по адресу "
                                 + getEndpoint().getRemoteAddress());
-                    } catch (NetworkCommunicationFailedException e) {
+                    } catch (NetworkCommunicationFailedException | EndpointDisconnectedException e) {
                         Logger.getGlobal().info("Отправлен ответ клиенту");
                     }
                 }
@@ -100,14 +105,22 @@ public class ClientConnection implements Closeable {
     }
 
     /**
+     * Получает запрос от клиента.
+     *
      * @return запрос от клиента
      */
-    public synchronized NetworkRequest pollRequest() throws EndpointDisconnectedException {
+    public synchronized NetworkRequest pollRequest() throws UnauthorizedRequestException {
         if (isDisconnected()) {
             throw new EndpointDisconnectedException();
         }
 
-        return state.pollRequest();
+        try {
+            return pollStrategy.poll(this);
+        } catch (UnauthorizedRequestException e) {
+            disconnect();
+
+            throw e;
+        }
     }
 
     /**
@@ -162,6 +175,22 @@ public class ClientConnection implements Closeable {
      */
     public synchronized ReadLoopState getState() {
         return state;
+    }
+
+    /**
+     * @return текущее стратегию получения запроса.
+     */
+    public synchronized PollStrategy getPollStrategy() {
+        return pollStrategy;
+    }
+
+    /**
+     * Устанавливает стратегию получения запроса.
+     *
+     * @param pollStrategy стратегия получения запроса
+     */
+    public synchronized void setPollStrategy(PollStrategy pollStrategy) {
+        this.pollStrategy = pollStrategy;
     }
 
     /**

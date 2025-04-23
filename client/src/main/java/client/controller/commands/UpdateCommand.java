@@ -39,7 +39,7 @@ public class UpdateCommand extends Command {
     
     @Override
     public void execute() throws NetworkCommunicationFailedException {
-        NetworkRequest req = new UpdateRequest(id, template);
+        NetworkRequest req = new UpdateRequest(runner.getUser(), id, template);
         NetworkResponse res = runner.getServerConnection().request(req);
 
         if (res instanceof ErrorResponse) {

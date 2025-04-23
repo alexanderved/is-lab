@@ -37,7 +37,7 @@ public class AddIfMinCommand extends Command {
 
     @Override
     public void execute() throws NetworkCommunicationFailedException {
-        NetworkRequest req = new AddIfMinRequest(template);
+        NetworkRequest req = new AddIfMinRequest(runner.getUser(), template);
         NetworkResponse res = runner.getServerConnection().request(req);
 
         if (res instanceof ErrorResponse) {
