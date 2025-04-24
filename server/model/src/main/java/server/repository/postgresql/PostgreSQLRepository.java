@@ -27,6 +27,15 @@ import java.util.HashSet;
 public class PostgreSQLRepository extends Repository implements AutoCloseable {
     private final Connection connection;
 
+    public PostgreSQLRepository(String url)
+            throws RepositoryAccessDeniedException {
+        try {
+            connection = DriverManager.getConnection("jdbc:postgresql://" + url);
+        } catch (SQLException e) {
+            throw new RepositoryAccessDeniedException(e);
+        }
+    }
+
     public PostgreSQLRepository(String url, String user, String password)
             throws RepositoryAccessDeniedException {
         try {

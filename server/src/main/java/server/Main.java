@@ -30,8 +30,12 @@ public class Main {
     
     public static void main(String[] args)
             throws UnknownHostException, RepositoryAccessDeniedException, NoSuchAlgorithmException {
-        PostgreSQLRepository repo = new PostgreSQLRepository(
-                "localhost:5432/studs", "alex", "");
+        PostgreSQLRepository repo;
+        if (args.length > 0) {
+            repo = new PostgreSQLRepository(args[0], args[1], args[2]);
+        } else {
+            repo = new PostgreSQLRepository("pg:5432/studs");
+        }
 
         TaskExecutor executor = new TaskExecutor(
                 (task) -> new Thread(task).start(), (task) -> new Thread(task).start());

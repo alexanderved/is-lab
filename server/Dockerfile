@@ -30,4 +30,4 @@ ENV REPO_PATH=repo.xml
 RUN echo "<collection></collection>" > $REPO_PATH
 
 EXPOSE 4891
-CMD ["bin/server"]
+CMD ["bin/server", "localhost:5430/studs", "postgres", "postgres"]

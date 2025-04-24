@@ -1,8 +1,40 @@
 services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres_container
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: studs
+    ports:
+      - "5430:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data/
+      - ./server/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: >
+      postgres -c max_connections=1000
+               -c shared_buffers=256MB
+               -c effective_cache_size=768MB
+               -c maintenance_work_mem=64MB
+               -c checkpoint_completion_target=0.7
+               -c wal_buffers=16MB
+               -c default_statistics_target=100
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+      interval: 5m
+      retries: 5
+      start_period: 5s
+      start_interval: 1s
+      timeout: 10s
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
+
   server:
     build:
       context: ./
       dockerfile: server/Dockerfile
+    network_mode: host
     ports:
       - 4891:4891
     healthcheck:
@@ -12,6 +44,9 @@ services:
       start_period: 5s
       start_interval: 1s
       timeout: 10s
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   client:
     build:
@@ -23,3 +58,7 @@ services:
     depends_on:
       server:
         condition: service_healthy
+
+volumes:
+  dbdata:
+    driver: local
