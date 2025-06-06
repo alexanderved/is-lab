@@ -14,6 +14,11 @@ public final class Address implements Validatable, Serializable {
     private final String street; // Строка не может быть пустой, Поле может быть null
     private final Location town; // Поле не может быть null
 
+    private Address() {
+        street = null;
+        town = null;
+    }
+
     /**
      * @param street Название улицы
      * @param town Координаты города

@@ -15,6 +15,12 @@ public final class Location implements Validatable, Serializable {
     private final Long y; // Поле не может быть null
     private final Integer z; // Поле не может быть null
 
+    private Location() {
+        x = 0L;
+        y = 0L;
+        z = 0;
+    }
+
     /**
      * @param x Координата X
      * @param y Координата Y

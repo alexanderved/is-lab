@@ -24,7 +24,7 @@ public final class Organization implements Validatable, Comparable<Organization>
     private OrganizationType type; // Поле не может быть null
     private Address officialAddress; // Поле может быть null
 
-    private int userId;
+    private final int userId;
 
     /**
      * Конструктор организации, в котором датой создания устанавливается данный момент времени.

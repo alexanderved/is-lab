@@ -7,8 +7,6 @@ public class AddResponse extends SuccessResponse {
     private final int addedId;
 
     public AddResponse(int addedId) {
-        super("Новый элемент с id = " + addedId + " успешно добавлен в коллекцию");
-
         this.addedId = addedId;
     }
 

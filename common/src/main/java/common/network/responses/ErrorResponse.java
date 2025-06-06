@@ -3,7 +3,7 @@ package common.network.responses;
 /**
  * Ответ от сервера об ошибке в процессе обработки запроса.
  */
-public class ErrorResponse extends FailureResponse {
+public class ErrorResponse extends NetworkResponse {
     /**
      * @param msg сообщение об ошибке
      */

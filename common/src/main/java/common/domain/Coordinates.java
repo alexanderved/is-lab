@@ -14,6 +14,11 @@ public final class Coordinates implements Validatable, Serializable {
     private final float x;
     private final Integer y; // Поле не может быть null
 
+    private Coordinates() {
+        x = 0;
+        y = 0;
+    }
+
     /**
      * @param x Координата X
      * @param y Координата Y

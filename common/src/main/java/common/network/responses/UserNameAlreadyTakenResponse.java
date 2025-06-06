@@ -1,6 +1,6 @@
 package common.network.responses;
 
-public class UserNameAlreadyTakenResponse extends FailureResponse {
+public class UserNameAlreadyTakenResponse extends NetworkResponse {
     private final String name;
 
     public UserNameAlreadyTakenResponse(String name) {

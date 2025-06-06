@@ -7,7 +7,7 @@ import java.io.Serializable;
  */
 public abstract class NetworkResponse implements Serializable {
     private String msg;
-
+    
     protected NetworkResponse(String msg) {
         this.msg = msg;
     }
