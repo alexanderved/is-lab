@@ -3,6 +3,8 @@ package server.controller;
 import common.exceptions.InvalidFieldFormatException;
 import common.exceptions.UserNameAlreadyTakenException;
 import common.exceptions.UserNotFoundException;
+import common.network.requests.LoginRequest;
+import common.network.requests.RegistrationRequest;
 import common.network.responses.LoginResponse;
 import common.network.responses.RefreshResponse;
 import common.network.responses.SuccessResponse;
@@ -12,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import server.exceptions.InvalidRefreshTokenException;
 import server.service.auth.AuthService;
-import server.controller.dto.UserDTO;
 import server.exceptions.UserDBAccessFailedException;
 import server.service.token.Token;
 import server.service.token.TokenPair;
@@ -24,23 +25,24 @@ public class AuthController {
     private final AuthService authService;
     private final TokenService tokenService;
 
-    public AuthController(AuthService authService, TokenService tokenService) {
+    public AuthController(AuthService authService,
+                          TokenService tokenService) {
         this.authService = authService;
         this.tokenService = tokenService;
     }
 
     @PostMapping("/registration")
-    public SuccessResponse register(@RequestBody UserDTO user)
-            throws InvalidFieldFormatException, UserDBAccessFailedException, UserNameAlreadyTakenException {
-        authService.register(user.toDomain());
+    public SuccessResponse registration(@RequestBody RegistrationRequest req)
+            throws UserDBAccessFailedException, UserNameAlreadyTakenException {
+        authService.register(req);
 
         return new SuccessResponse();
     }
 
     @PostMapping("/login")
-    public SuccessResponse login(@RequestBody UserDTO user)
+    public LoginResponse login(@RequestBody LoginRequest req)
             throws InvalidFieldFormatException, UserDBAccessFailedException, UserNotFoundException {
-        TokenPair pair = authService.login(user.toDomain());
+        TokenPair pair = authService.login(req);
         String access = tokenService.generateTokenString(pair.getAccess());
         String refresh = tokenService.generateTokenString(pair.getRefresh());
 

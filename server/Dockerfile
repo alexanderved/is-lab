@@ -12,7 +12,6 @@ COPY ./settings.gradle.kts .
 COPY ./gradlew .
 
 RUN ./gradlew :server:build
-RUN ./gradlew :server:installDist
 
 FROM openjdk:17-oracle
 
@@ -23,11 +22,10 @@ WORKDIR /usr/server
 RUN microdnf install findutils
 RUN microdnf install net-tools
 
-COPY --from=builder $APP_SRC/server/build/install/server/bin/ bin/
-COPY --from=builder $APP_SRC/server/build/install/server/lib/ lib/
+COPY --from=builder $APP_SRC/server/build/libs/server.jar /
+COPY --from=builder $APP_SRC/server/build/libs/server-plain.jar /
 
-ENV REPO_PATH=repo.xml
-RUN echo "<collection></collection>" > $REPO_PATH
+EXPOSE 8080
+#CMD ["bin/server", "localhost:5430/studs", "postgres", "postgres"]
 
-EXPOSE 4891
-CMD ["bin/server", "localhost:5430/studs", "postgres", "postgres"]
+CMD ["java", "-jar", "server.jar"]

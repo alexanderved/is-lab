@@ -14,20 +14,23 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import server.exceptions.MalformedTokenException;
 import server.exceptions.RepositoryAccessFailedException;
 import server.service.auth.AuthService;
-import server.service.auth.HashedUser;
 import server.service.token.Token;
 import server.service.token.TokenService;
+import server.service.user.User;
+import server.service.user.UserService;
+
 import java.io.IOException;
 
 @Component
 public class TokenFilter extends OncePerRequestFilter {
     private final static String BEARER_PREFIX = "Bearer ";
 
-    public final AuthService authService;
+    public final UserService userService;
     public final TokenService tokenService;
 
-    public TokenFilter(AuthService authService, TokenService tokenService) {
-        this.authService = authService;
+    public TokenFilter(UserService userService,
+                       TokenService tokenService) {
+        this.userService = userService;
         this.tokenService = tokenService;
     }
 
@@ -43,10 +46,10 @@ public class TokenFilter extends OncePerRequestFilter {
 
         String tokenString = header.split(" ")[1].trim();
         Token token;
-        HashedUser user;
+        User user;
         try {
             token = tokenService.parseTokenString(tokenString);
-            user = authService.findByName(token.getUsername());
+            user = userService.findByName(token.getUsername());
         } catch (UserNotFoundException | RepositoryAccessFailedException | MalformedTokenException e) {
             filterChain.doFilter(request, response);
             return;

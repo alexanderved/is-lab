@@ -8,12 +8,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import common.domain.Organization;
 import common.domain.OrganizationTemplate;
 import org.springframework.stereotype.Service;
-import server.repository.OrganizationDAO;
+import server.repository.AOrganizationRepository;
 import server.service.token.Token;
 import server.exceptions.CollectionOperationFailedException;
 import server.exceptions.RepositoryAccessFailedException;
 import server.exceptions.RepositoryDataCorruptedException;
-import server.logger.Logger;
+import server.utils.logger.Logger;
 import common.utils.validators.OrganizationCollectionValidator;
 
 /**
@@ -23,34 +23,34 @@ import common.utils.validators.OrganizationCollectionValidator;
 public class CollectionService {
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private final HashSet<Organization> collection;
-    private final OrganizationDAO organizationDAO;
+    private final AOrganizationRepository AOrganizationRepository;
     private final ZonedDateTime initDate;
     private ZonedDateTime lastModDate;
 
     /**
-     * @param organizationDAO Репозиторий организаций
+     * @param AOrganizationRepository Репозиторий организаций
      * @throws RepositoryAccessFailedException если не удается получить
      *                                         доступ к репозиторию
      * @throws RepositoryDataCorruptedException если данные в репозитории не соответствуют
      *                                          ожидаемому формату
      */
-    public CollectionService(OrganizationDAO organizationDAO)
+    public CollectionService(AOrganizationRepository AOrganizationRepository)
             throws RepositoryAccessFailedException, RepositoryDataCorruptedException {
-        if (organizationDAO == null) {
+        if (AOrganizationRepository == null) {
             throw new IllegalArgumentException(
                     "`organizationDAO` в классе `CollectionManager` не должно быть null");
         }
-        this.organizationDAO = organizationDAO;
+        this.AOrganizationRepository = AOrganizationRepository;
 
-        collection = loadCollection(organizationDAO);
+        collection = loadCollection(AOrganizationRepository);
         initDate = ZonedDateTime.now();
         lastModDate = initDate;
     }
 
-    private static HashSet<Organization> loadCollection(OrganizationDAO organizationDAO)
+    private static HashSet<Organization> loadCollection(AOrganizationRepository AOrganizationRepository)
         throws RepositoryAccessFailedException, RepositoryDataCorruptedException
     {
-        HashSet<Organization> collection = new HashSet<>(organizationDAO.load());
+        HashSet<Organization> collection = new HashSet<>(AOrganizationRepository.load());
         if (!OrganizationCollectionValidator.validate(collection)) {
             throw new RepositoryDataCorruptedException();
         }
@@ -113,17 +113,39 @@ public class CollectionService {
     }
 
     /**
-     * @return коллекцию, элементы которой отсортированы по имени
+     * @return коллекцию
      */
-    public List<Organization> getSortedCollection() {
+    public List<Organization> getCollection(String order,
+                                            String column,
+                                            int perPageNumber,
+                                            int pageCount,
+                                            String filter) {
         lock.readLock().lock();
         try {
             return collection.stream()
-                    .sorted((a, b) -> a.getName().compareTo(b.getName()))
+                    .filter((org) -> org.getName().contains(filter))
+                    .sorted((a, b) -> compareOrganizations(a, b, column, order))
+                    .limit((long) pageCount * perPageNumber)
                     .toList();
         } finally {
             lock.readLock().unlock();
         }
+    }
+
+    private static int compareOrganizations(Organization a, Organization b, String field, String order) {
+        return switch (field) {
+            case "id" -> Integer.compare(a.getId(), b.getId());
+            case "name" -> a.getName().compareTo(b.getName());
+            case "creationDate" -> a.getCreationDate().compareTo(b.getCreationDate());
+            case "annualTurnover" -> Float.compare(a.getAnnualTurnover(), b.getAnnualTurnover());
+            case "fullName" -> a.getFullName().compareTo(b.getFullName());
+            case "employeesCount" -> Integer.compare(a.getEmployeesCount(), b.getEmployeesCount());
+            case "type" -> a.getType().compareTo(b.getType());
+            case "officialAddress" -> a.getOfficialAddress()
+                    .getStreet()
+                    .compareTo(b.getOfficialAddress().getStreet());
+            default -> 0;
+        } * (order.equals("ASC") ? 1 : -1);
     }
 
     /**
@@ -141,7 +163,7 @@ public class CollectionService {
         try {
             Organization org;
             try {
-                org = organizationDAO.add(template, token);
+                org = AOrganizationRepository.add(template, token);
             } catch (RepositoryAccessFailedException e) {
                 throw new CollectionOperationFailedException(e);
             }
@@ -167,7 +189,7 @@ public class CollectionService {
         lock.writeLock().lock();
         try {
             try {
-                if (organizationDAO.remove(id, token)) {
+                if (AOrganizationRepository.remove(id, token)) {
                     collection.removeIf((org) -> org.getId() == id);
                     updateLastModDate();
 
@@ -197,7 +219,7 @@ public class CollectionService {
         lock.writeLock().lock();
         try {
             try {
-                if (organizationDAO.update(id, template, token)) {
+                if (AOrganizationRepository.update(id, template, token)) {
                     collection.stream()
                             .filter((org) -> org.getId() == id)
                             .findFirst()

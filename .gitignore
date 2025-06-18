@@ -1,13 +1,9 @@
 build/
 common/bin/
-client/bin/
 server/bin/
+common/build/
+server/build/
 .idea/
 out/
 proglab-sem2.iml
 .gradle
-server/controller/bin/
-server/model/bin/
-server/utils/bin/
-server/network.connections/bin/
-server/network.providers/bin/

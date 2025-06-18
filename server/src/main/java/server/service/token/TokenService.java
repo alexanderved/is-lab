@@ -7,8 +7,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Service;
 import server.exceptions.MalformedTokenException;
-import server.service.auth.HashedUser;
-import server.service.auth.Role;
+import server.service.user.Role;
+import server.service.user.User;
 
 import javax.crypto.SecretKey;
 import java.time.Duration;
@@ -30,7 +30,7 @@ public class TokenService {
         key = Keys.hmacShaKeyFor(SECRET.getBytes());
     }
 
-    public TokenPair generateTokenPair(HashedUser user) {
+    public TokenPair generateTokenPair(User user) {
         Date creationDate = new Date();
         Date accessExpirationDate = new Date(creationDate.getTime() + ACCESS_EXPIRATION_TIME.toMillis());
         Date refreshExpirationDate = new Date(creationDate.getTime() + REFRESH_EXPIRATION_TIME.toMillis());
@@ -77,13 +77,13 @@ public class TokenService {
         }
     }
 
-    public boolean isAccessTokenValid(Token token, HashedUser user) {
+    public boolean isAccessTokenValid(Token token, User user) {
         return token.getType() == Token.Type.ACCESS && token.getIssuer().equals(ISSUER)
                 && token.getExpirationDate().after(new Date())
                 && token.getUsername().equals(user.getUsername());
     }
 
-    public boolean isRefreshTokenValid(Token token, HashedUser user) {
+    public boolean isRefreshTokenValid(Token token, User user) {
         return token.getType() == Token.Type.REFRESH && token.getIssuer().equals(ISSUER)
                 && token.getExpirationDate().after(new Date())
                 && token.getUsername().equals(user.getUsername())

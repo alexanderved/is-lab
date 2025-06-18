@@ -2,62 +2,74 @@ package server.service.auth;
 
 import common.exceptions.UserNameAlreadyTakenException;
 import common.exceptions.UserNotFoundException;
+import common.network.requests.LoginRequest;
+import common.network.requests.RegistrationRequest;
 import org.springframework.stereotype.Service;
 import server.exceptions.InvalidRefreshTokenException;
 import server.exceptions.RepositoryAccessFailedException;
 import server.exceptions.UserDBAccessFailedException;
-import server.repository.UserDAO;
+import server.repository.AUserRepository;
 import server.service.token.Token;
 import server.service.token.TokenPair;
 import server.service.token.TokenService;
+import server.service.user.Role;
+import server.service.user.User;
+import server.service.user.UserTemplate;
 
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.List;
 import java.util.Random;
 
 @Service
 public class AuthService {
     private static final Random RANDOM = new SecureRandom();
 
-    private final UserDAO userDAO;
+    private final AUserRepository AUserRepository;
     private final Hasher hasher;
     public final TokenService tokenService;
 
-    public AuthService(UserDAO userDAO, Hasher hasher, TokenService tokenService) {
-        this.userDAO = userDAO;
+    public AuthService(AUserRepository AUserRepository, Hasher hasher,
+                       TokenService tokenService) {
+        this.AUserRepository = AUserRepository;
         this.hasher = hasher;
         this.tokenService = tokenService;
     }
 
-    public HashedUser findByName(String name)
-            throws UserNotFoundException, RepositoryAccessFailedException {
-        return userDAO.findByName(name);
-    }
-
-    public void register(User user)
+    public void register(RegistrationRequest req)
             throws UserNameAlreadyTakenException, UserDBAccessFailedException {
         String salt = generateSalt();
-        String passwordHash = hashPassword(user.getPassword(), salt);
+        String passwordHash = hashPassword(req.getPassword(), salt);
+
+        UserTemplate template = new UserTemplate()
+                .setUsername(req.getUsername())
+                .setEmail(req.getEmail())
+                .setFirstName(req.getFirstName())
+                .setSecondName(req.getSecondName())
+                .setRole(Role.ROLE_USER)
+                .setPasswordHash(passwordHash)
+                .setSalt(salt);
 
         try {
-            userDAO.add(new HashedUser(user.getUsername(), user.getRole(), passwordHash, salt));
+            AUserRepository.add(template);
         } catch (RepositoryAccessFailedException e) {
             throw new UserDBAccessFailedException(e);
         }
     }
 
-    public TokenPair login(User user)
+    public TokenPair login(LoginRequest req)
             throws UserNotFoundException, UserDBAccessFailedException {
         try {
-            HashedUser hashedUser = findByName(user.getUsername());
-            String hashedPassword = hashPassword(user.getPassword(), hashedUser.getSalt());
-            if (!hashedPassword.equals(hashedUser.getPasswordHash())) {
+            User user = AUserRepository.findByName(req.getUsername());
+            String hashedPassword = hashPassword(req.getPassword(), user.getSalt());
+            if (!hashedPassword.equals(user.getPasswordHash())) {
                 throw new UserNotFoundException();
             }
 
-            TokenPair pair = tokenService.generateTokenPair(hashedUser);
-            hashedUser.addRefreshToken(tokenService.generateTokenString(pair.getRefresh()));
-            userDAO.update(hashedUser);
+            TokenPair pair = tokenService.generateTokenPair(user);
+            List<String> tokens = user.getRefreshTokens();
+            tokens.add(tokenService.generateTokenString(pair.getRefresh()));
+            AUserRepository.update(user);
 
             return pair;
         } catch (RepositoryAccessFailedException e) {
@@ -68,16 +80,18 @@ public class AuthService {
     public TokenPair refresh(Token token)
             throws UserDBAccessFailedException, InvalidRefreshTokenException {
         try {
-            HashedUser hashedUser = userDAO.findByName(token.getUsername());
-            if (!tokenService.isRefreshTokenValid(token, hashedUser)) {
+            User user = AUserRepository.findByName(token.getUsername());
+            if (!tokenService.isRefreshTokenValid(token, user)) {
                 throw new InvalidRefreshTokenException();
             }
 
-            TokenPair pair = tokenService.generateTokenPair(hashedUser);
+            TokenPair pair = tokenService.generateTokenPair(user);
 
-            hashedUser.removeRefreshToken(tokenService.generateTokenString(token));
-            hashedUser.addRefreshToken(tokenService.generateTokenString(pair.getRefresh()));
-            userDAO.update(hashedUser);
+            List<String> tokens = user.getRefreshTokens();
+            tokens.remove(tokenService.generateTokenString(token));
+            tokens.add(tokenService.generateTokenString(pair.getRefresh()));
+
+            AUserRepository.update(user);
 
             return pair;
         } catch (RepositoryAccessFailedException e) {

@@ -1,0 +1,149 @@
+package server.model;
+
+import jakarta.persistence.*;
+import org.hibernate.annotations.Check;
+import server.service.user.Role;
+import server.service.user.UserTemplate;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+@Entity
+@Table(name = "users")
+public class User implements Serializable {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="id", nullable=false, unique=true)
+    private int id;
+
+    @Column(name = "username", unique = true, nullable = false)
+    @Check(constraints = "LENGTH(username) > 0")
+    private String username;
+
+    @Column(name = "email", unique = true, nullable = false)
+    private String email;
+
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "second_name")
+    private String secondName;
+
+    @Column(name = "role", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
+    @Column(name = "password_hash", length = 128, nullable = false)
+    private String passwordHash;
+
+    @Column(name = "salt", length = 24, nullable = false)
+    private String salt;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,
+            mappedBy = "user", orphanRemoval = true)
+    private final List<RefreshToken> refreshTokens = new ArrayList<>();
+
+    public User() {
+
+    }
+
+    public User(UserTemplate template) {
+        username = Objects.requireNonNull(template.getUsername());
+        email = Objects.requireNonNull(template.getEmail());
+        firstName = template.getFirstName();
+        secondName = template.getSecondName();
+        role = Objects.requireNonNull(template.getRole());
+        passwordHash = Objects.requireNonNull(template.getPasswordHash());
+        salt = Objects.requireNonNull(template.getSalt());
+
+        template.getRefreshTokens()
+                .stream()
+                .map((tokenString) -> new RefreshToken(tokenString, this))
+                .forEach(refreshTokens::add);
+    }
+
+    public void update(server.service.user.User user) {
+        username = Objects.requireNonNull(user.getUsername());
+        email = Objects.requireNonNull(user.getEmail());
+        firstName = user.getFirstName();
+        secondName = user.getSecondName();
+        role = Objects.requireNonNull(user.getRole());
+        passwordHash = Objects.requireNonNull(user.getPasswordHash());
+        salt = Objects.requireNonNull(user.getSalt());
+
+        List<RefreshToken> tokens = new ArrayList<>(getRefreshTokens());
+        outer: for (String tokenString : user.getRefreshTokens()) {
+            var it = tokens.iterator();
+            while (it.hasNext()) {
+                RefreshToken dto = it.next();
+                if (dto.getToken().equals(tokenString)) {
+                    it.remove();
+                    continue outer;
+                }
+            }
+
+            getRefreshTokens().add(new RefreshToken(tokenString, this));
+        }
+
+        List<String> userTokens = new ArrayList<>(user.getRefreshTokens());
+        var it = getRefreshTokens().iterator();
+        outer: while (it.hasNext()) {
+            RefreshToken dto = it.next();
+
+            var iit = userTokens.iterator();
+            while (iit.hasNext()) {
+                String tokenString = iit.next();
+                if (dto.getToken().equals(tokenString)) {
+                    iit.remove();
+                    continue outer;
+                }
+            }
+
+            it.remove();
+        }
+    }
+
+    public server.service.user.User toUser() {
+        UserTemplate template = new UserTemplate()
+                .setUsername(username)
+                .setEmail(email)
+                .setFirstName(firstName)
+                .setSecondName(secondName)
+                .setRole(role)
+                .setPasswordHash(passwordHash)
+                .setSalt(salt);
+
+        List<String> tokens = refreshTokens.stream()
+                .map(RefreshToken::getToken)
+                .toList();
+        template.setRefreshTokens(tokens);
+
+        return new server.service.user.User(id, template);
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public String getSalt() {
+        return salt;
+    }
+
+    public List<RefreshToken> getRefreshTokens() {
+        return refreshTokens;
+    }
+}

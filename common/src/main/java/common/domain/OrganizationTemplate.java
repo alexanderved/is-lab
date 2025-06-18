@@ -11,13 +11,17 @@ import common.utils.validators.OrganizationTemplateValidator;
  * Шаблон организации, представляющий собой набор данных этой организации.
  */
 public final class OrganizationTemplate implements Validatable, Comparable<Organization>, Serializable {
-    private final String name;
-    private final Coordinates coordinates;
-    private final Float annualTurnover;
-    private final String fullName;
-    private final int employeesCount;
-    private final OrganizationType type;
-    private final Address officialAddress;
+    private String name;
+    private Coordinates coordinates;
+    private Float annualTurnover;
+    private String fullName;
+    private int employeesCount;
+    private OrganizationType type;
+    private Address officialAddress;
+
+    private OrganizationTemplate() {
+
+    }
 
     private OrganizationTemplate(Builder builder) {
         name = builder.name;
