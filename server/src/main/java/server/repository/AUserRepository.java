@@ -14,6 +14,8 @@ public abstract class AUserRepository {
             throws RepositoryAccessFailedException, UserNotFoundException;
     public abstract User findByName(String name)
             throws RepositoryAccessFailedException, UserNotFoundException;
+    public abstract void createSuperadmin(UserTemplate template)
+            throws RepositoryAccessFailedException, UserNameAlreadyTakenException;
     public abstract void add(UserTemplate template)
             throws RepositoryAccessFailedException, UserNameAlreadyTakenException;
     public abstract void update(User user)

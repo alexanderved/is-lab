@@ -44,8 +44,8 @@ const UserInfoPage = () => {
 
                 return response.json();
             })
-            .then(() => {
-                findByName(formValue.username)
+            .then(async () => {
+                await findByName(formValue.username)
                     .then((userInfo) => {
                         if (userInfo != null) {
                             setFormValue(userInfo);

@@ -5,6 +5,7 @@ import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.annotation.Bean;
@@ -36,37 +37,41 @@ public class Main {
     }
 
     @Bean
-    public HibernateConfiguration postgreSQLContext() {
-        return new HibernateConfiguration("jdbc:postgresql:studs",
-                "alex", "password");
+    public HibernateConfiguration hibernateConfiguration(@Value("${db.url}") String url,
+                                                         @Value("${db.user}") String user,
+                                                         @Value("${db.password}") String password) {
+        return new HibernateConfiguration(url, user, password);
     }
 
     @Bean
-    public AUserRepository userDAO() {
-        return new UserRepositoryImpl(postgreSQLContext());
+    public AUserRepository userRepository(HibernateConfiguration hibernateConfiguration) {
+        return new UserRepositoryImpl(hibernateConfiguration);
     }
 
     @Bean
-    public AOrganizationRepository organizationDAO() {
-        return new OrganizationRepositoryImpl(postgreSQLContext());
+    public AOrganizationRepository organizationRepository(HibernateConfiguration hibernateConfiguration) {
+        return new OrganizationRepositoryImpl(hibernateConfiguration);
     }
 
     @Bean
-    public MinioClient minioClient()
+    public MinioClient minioClient(@Value("${minio.endpoint}") String endpoint,
+                                   @Value("${minio.accessKey}") String accessKey,
+                                   @Value("${minio.secretKey}") String secretKey,
+                                   @Value("${minio.bucket}") String bucket)
             throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException {
         MinioClient minioClient = MinioClient.builder()
-                .endpoint("http://127.0.0.1:9000")
-                .credentials("minioadmin", "minioadmin")
+                .endpoint(endpoint)
+                .credentials(accessKey, secretKey)
                 .build();
 
         boolean found = minioClient.bucketExists(
                 BucketExistsArgs.builder()
-                        .bucket("proglab")
+                        .bucket(bucket)
                         .build());
         if (!found) {
             minioClient.makeBucket(
                     MakeBucketArgs.builder()
-                            .bucket("proglab")
+                            .bucket(bucket)
                             .build());
         }
 

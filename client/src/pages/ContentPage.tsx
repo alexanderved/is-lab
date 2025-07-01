@@ -96,7 +96,8 @@ filter=${nameFilter}`, { method: "GET" })
         const dataHeight = organizations.length * ROW_HEIGHT;
         const top = Math.abs(y);
 
-        if (dataHeight - top - TABLE_HEIGHT < LOAD_MORE_DELTA && pageCount * PER_PAGE_NUMBER * ROW_HEIGHT <= dataHeight) {
+        if (dataHeight - top - TABLE_HEIGHT < LOAD_MORE_DELTA
+                && pageCount * PER_PAGE_NUMBER * ROW_HEIGHT <= dataHeight) {
             setPageCount(pageCount + 1);
         }
     };

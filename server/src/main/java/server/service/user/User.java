@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.List;
 
 public class User implements UserDetails {
-    private final int id;
+    private int id;
     private final String username;
     private final String email;
     private final String firstName;
@@ -33,6 +33,10 @@ public class User implements UserDetails {
 
     public int getId() {
         return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     @Override

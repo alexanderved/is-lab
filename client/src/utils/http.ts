@@ -1,6 +1,7 @@
 import { getAccessToken, logout, refresh } from "./auth";
 
-const SERVER_API_URL = "http://localhost:8080/api";
+const SERVER_API_URL = import.meta.env.MODE == "!development" ? "http://localhost:8080/api"
+                                                             : "http://localhost:4891/api";
 
 export const request = async (url: string, init?: RequestInit) => fetch(SERVER_API_URL + url, init);
 export const redirect = (url: string) => window.location.replace(url);
@@ -24,9 +25,8 @@ export const requestAuthorized = async (url: string, init?: RequestInit) => {
     if (accessResponse.ok) {
         return accessResponse;
     } else if (accessResponse.status == 401) {
-        let refreshResponse;
         try {
-            refreshResponse = await refresh();
+            await refresh();
         } catch (e) {
             logout();
         }

@@ -36,6 +36,27 @@ public class AuthService {
         this.tokenService = tokenService;
     }
 
+    public void registerSuperadmin(RegistrationRequest req)
+            throws UserNameAlreadyTakenException, UserDBAccessFailedException {
+        String salt = generateSalt();
+        String passwordHash = hashPassword(req.getPassword(), salt);
+
+        UserTemplate template = new UserTemplate()
+                .setUsername(req.getUsername())
+                .setEmail(req.getEmail())
+                .setFirstName(req.getFirstName())
+                .setSecondName(req.getSecondName())
+                .setRole(Role.ROLE_USER)
+                .setPasswordHash(passwordHash)
+                .setSalt(salt);
+
+        try {
+            AUserRepository.createSuperadmin(template);
+        } catch (RepositoryAccessFailedException e) {
+            throw new UserDBAccessFailedException(e);
+        }
+    }
+
     public void register(RegistrationRequest req)
             throws UserNameAlreadyTakenException, UserDBAccessFailedException {
         String salt = generateSalt();

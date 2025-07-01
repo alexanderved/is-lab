@@ -48,9 +48,9 @@ const SignUpPage = () => {
 
     const onFormSubmit = () => {
         registration(formValue)
-            .then(() => {
+            .then(async () => {
                 if (fileInfo != null) {
-                    upload({ dataURL: fileInfo, filename: formValue.username } as UploadRequest);
+                    await upload({ dataURL: fileInfo, filename: formValue.username } as UploadRequest);
                 }
             })
             .then(() => http.redirect("/signin"))

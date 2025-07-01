@@ -8,6 +8,7 @@ import server.config.HibernateConfiguration;
 import server.exceptions.RepositoryAccessFailedException;
 import server.model.User;
 import server.repository.AUserRepository;
+import server.service.user.Role;
 import server.service.user.UserTemplate;
 
 import java.util.List;
@@ -36,7 +37,8 @@ public class UserRepositoryImpl extends AUserRepository {
     }
 
     @Override
-    public server.service.user.User find(int id) throws RepositoryAccessFailedException, UserNotFoundException {
+    public server.service.user.User find(int id)
+            throws RepositoryAccessFailedException, UserNotFoundException {
         server.service.user.User user = ctx.getSessionFactory().fromTransaction(session -> {
             User userDTO = session.get(User.class, id);
             if (userDTO == null) {
@@ -73,6 +75,32 @@ public class UserRepositoryImpl extends AUserRepository {
     }
 
     @Override
+    public void createSuperadmin(UserTemplate template)
+            throws UserNameAlreadyTakenException {
+        boolean isAdded = ctx.getSessionFactory().fromTransaction(session -> {
+            try {
+                var userDTO = new User(template);
+
+                var user = userDTO.toUser();
+                user.setRole(Role.ROLE_SUPERADMIN);
+                userDTO.update(user);
+
+                session.persist(userDTO);
+                session.createMutationQuery("UPDATE User SET id = 0 WHERE username = 'root'")
+                            .executeUpdate();
+            } catch (ConstraintViolationException e) {
+                return false;
+            }
+
+            return true;
+        });
+
+        if (!isAdded) {
+            throw new UserNameAlreadyTakenException(template.getUsername());
+        }
+    }
+
+    @Override
     public void add(UserTemplate template)
             throws UserNameAlreadyTakenException {
         boolean isAdded = ctx.getSessionFactory().fromTransaction(session -> {
@@ -91,7 +119,8 @@ public class UserRepositoryImpl extends AUserRepository {
     }
 
     @Override
-    public void update(server.service.user.User user) throws RepositoryAccessFailedException, UserNotFoundException {
+    public void update(server.service.user.User user)
+            throws RepositoryAccessFailedException, UserNotFoundException {
         boolean isUpdated = ctx.getSessionFactory().fromTransaction(session -> {
             User userDTO = findDTOByName(session, user.getUsername());
             if (userDTO == null) {

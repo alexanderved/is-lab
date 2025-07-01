@@ -5,6 +5,7 @@ import io.minio.errors.ErrorResponseException;
 import io.minio.errors.MinioException;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -14,9 +15,11 @@ import java.util.*;
 
 @Service
 public class FileStorageService {
+    private final String minioBucket;
     private final MinioClient minioClient;
 
-    public FileStorageService(MinioClient minioClient) {
+    public FileStorageService(MinioClient minioClient, @Value("${minio.bucket}") String minioBucket) {
+        this.minioBucket = minioBucket;
         this.minioClient = minioClient;
     }
 
@@ -28,7 +31,7 @@ public class FileStorageService {
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(data)) {
             minioClient.putObject(
                     PutObjectArgs.builder()
-                            .bucket("proglab")
+                            .bucket(minioBucket)
                             .contentType(mimeType)
                             .object(filename)
                             .stream(inputStream, inputStream.available(), -1)
@@ -42,7 +45,7 @@ public class FileStorageService {
         try {
             var info = minioClient.statObject(
                     StatObjectArgs.builder()
-                            .bucket("proglab")
+                            .bucket(minioBucket)
                             .object(filename)
                             .build());
             mimeType = info.contentType();
@@ -52,7 +55,7 @@ public class FileStorageService {
 
         var stream = minioClient.getObject(
                 GetObjectArgs.builder()
-                        .bucket("proglab")
+                        .bucket(minioBucket)
                         .object(filename)
                         .build());
 
