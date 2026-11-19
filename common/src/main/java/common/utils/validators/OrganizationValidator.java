@@ -1,47 +1,40 @@
 package common.utils.validators;
 
-import java.time.ZonedDateTime;
-
 import common.domain.Address;
-import common.domain.Coordinates;
 import common.domain.Organization;
 import common.domain.OrganizationType;
 
 public final class OrganizationValidator {
     public static boolean validate(Organization org) {
         return org != null
-            && validateId(org.getId())
-            && validateName(org.getName())
-            && validateCoordinates(org.getCoordinates())
-            && validateCreationDate(org.getCreationDate())
-            && validateAnnualTurnover(org.getAnnualTurnover())
-            && validateEmployeesCount(org.getEmployeesCount())
-            && validateType(org.getType())
-            && validateOfficialAddress(org.getOfficialAddress());
+                && validateId(org.getId())
+                && validateAnnualTurnover(org.getAnnualTurnover())
+                && validateEmployeesCount(org.getEmployeesCount())
+                && validateFullName(org.getFullName())
+                && validateRating(org.getRating())
+                && validateType(org.getType())
+                && validateOfficialAddress(org.getOfficialAddress())
+                && validatePostalAddress(org.getPostalAddress());
     }
 
     public static boolean validateId(int id) {
         return id > 0;
     }
 
-    public static boolean validateName(String name) {
-        return OrganizationTemplateValidator.validateName(name);
-    }
-
-    public static boolean validateCoordinates(Coordinates coordinates) {
-        return OrganizationTemplateValidator.validateCoordinates(coordinates);
-    }
-
-    public static boolean validateCreationDate(ZonedDateTime creationDate) {
-        return creationDate != null;
-    }
-
-    public static boolean validateAnnualTurnover(Float annualTurnover) {
+    public static boolean validateAnnualTurnover(Long annualTurnover) {
         return OrganizationTemplateValidator.validateAnnualTurnover(annualTurnover);
     }
 
-    public static boolean validateEmployeesCount(int employeesCount) {
+    public static boolean validateEmployeesCount(Long employeesCount) {
         return OrganizationTemplateValidator.validateEmployeesCount(employeesCount);
+    }
+
+    public static boolean validateFullName(String fullName) {
+        return OrganizationTemplateValidator.validateFullName(fullName);
+    }
+
+    public static boolean validateRating(Float rating) {
+        return OrganizationTemplateValidator.validateRating(rating);
     }
 
     public static boolean validateType(OrganizationType type) {
@@ -50,5 +43,9 @@ public final class OrganizationValidator {
 
     public static boolean validateOfficialAddress(Address officialAddress) {
         return OrganizationTemplateValidator.validateOfficialAddress(officialAddress);
+    }
+
+    public static boolean validatePostalAddress(Address postalAddress) {
+        return OrganizationTemplateValidator.validatePostalAddress(postalAddress);
     }
 }

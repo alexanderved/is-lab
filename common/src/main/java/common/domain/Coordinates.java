@@ -3,53 +3,32 @@ package common.domain;
 import java.io.Serializable;
 import java.util.Objects;
 
-import common.exceptions.InvalidFieldFormatException;
 import common.utils.Validatable;
-import common.utils.validators.CoordinatesValidator;
 
-/** 
- * Класс координат на плоскости.
- */
 public final class Coordinates implements Validatable, Serializable {
-    private final float x;
-    private final Integer y; // Поле не может быть null
+    private final int x;
+    private final float y;
 
     private Coordinates() {
         x = 0;
         y = 0;
     }
 
-    /**
-     * @param x Координата X
-     * @param y Координата Y
-     * @throws InvalidFieldFormatException если аргументы не удовлетворяют ожидаемому формату
-     */
-    public Coordinates(float x, Integer y) throws InvalidFieldFormatException {
+    public Coordinates(int x, float y) {
         this.x = x;
-
-        if (!CoordinatesValidator.validateY(y)) {
-            throw new InvalidFieldFormatException("y", "Поле `y` не может null");
-        }
         this.y = y;
     }
 
-    /**
-     * @return координату X
-     */
-    public float getX() {
+    public int getX() {
         return x;
     }
-
-    /**
-     * @return Координату Y
-     */
-    public Integer getY() {
+    public float getY() {
         return y;
     }
 
     @Override
     public boolean isValid() {
-        return CoordinatesValidator.validate(this);
+        return true;
     }
 
     @Override
@@ -64,7 +43,7 @@ public final class Coordinates implements Validatable, Serializable {
 
         Coordinates c = (Coordinates)o;
 
-        return x == c.x && y.equals(c.y);
+        return x == c.x && y == c.y;
     }
 
     @Override

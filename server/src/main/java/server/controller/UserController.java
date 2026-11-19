@@ -1,38 +1,49 @@
 package server.controller;
 
 import common.exceptions.UserNotFoundException;
-import common.network.responses.SuccessResponse;
-import org.springframework.web.bind.annotation.*;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import server.exceptions.RepositoryAccessFailedException;
-import server.service.user.Role;
-import server.service.user.User;
 import server.service.user.UserInfo;
 import server.service.user.UserService;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/api")
+@Path("/users")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 public class UserController {
-    private final UserService userService;
+    @Inject
+    private UserService userService;
 
-    public UserController(UserService userService) {
-         this.userService = userService;
+    public UserController() {
+
     }
 
-    @GetMapping("/users")
-    public List<UserInfo> list(@RequestParam(defaultValue = "") String filter)
+    @GET
+    public Response list(@QueryParam("filter") @DefaultValue("") String filter)
             throws UserNotFoundException, RepositoryAccessFailedException {
-        return userService.load()
+        List<UserInfo> users = userService.load()
                 .stream()
                 .map(UserInfo::fromUser)
                 .filter((u) -> u.username().contains(filter))
                 .toList();
+
+        return Response.ok(users).build();
     }
 
-    @GetMapping("/users/{username}")
-    public UserInfo findByName(@PathVariable String username)
+    @GET
+    @Path("/{username}")
+    public Response findByName(@PathParam("username") String username)
             throws UserNotFoundException, RepositoryAccessFailedException {
-        return UserInfo.fromUser(userService.findByName(username));
+        return Response.ok(UserInfo.fromUser(userService.findByName(username))).build();
     }
 }

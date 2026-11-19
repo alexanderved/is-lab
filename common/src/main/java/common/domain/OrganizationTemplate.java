@@ -11,63 +11,61 @@ import common.utils.validators.OrganizationTemplateValidator;
  * Шаблон организации, представляющий собой набор данных этой организации.
  */
 public final class OrganizationTemplate implements Validatable, Comparable<Organization>, Serializable {
-    private String name;
-    private Coordinates coordinates;
-    private Float annualTurnover;
-    private String fullName;
-    private int employeesCount;
-    private OrganizationType type;
     private Address officialAddress;
+    private Long annualTurnover;
+    private Long employeesCount;
+    private String fullName;
+    private Float rating;
+    private OrganizationType type;
+    private Address postalAddress;
 
     private OrganizationTemplate() {
 
     }
 
     private OrganizationTemplate(Builder builder) {
-        name = builder.name;
-        coordinates = builder.coordinates;
-        annualTurnover = builder.annualTurnover;
-        fullName = builder.fullName;
-        employeesCount = builder.employeesCount;
-        type = builder.type;
         officialAddress = builder.officialAddress;
+        annualTurnover = builder.annualTurnover;
+        employeesCount = builder.employeesCount;
+        fullName = builder.fullName;
+        rating = builder.rating;
+        type = builder.type;
+        postalAddress = builder.postalAddress;
     }
 
     /**
-     * @return название организации
+     * @return официальный адрес организации или null, если данная информация отсутствует
      */
-    public String getName() {
-        return name;
+    public Address getOfficialAddress() {
+        return officialAddress;
     }
 
     /**
-     * @return координаты организации
+     * @return годовой оборот организации
      */
-    public Coordinates getCoordinates() {
-        return coordinates;
-    }
-
-    /**
-     * @return годовой оборот организации или null, если данная информация
-     *         отсутствует
-     */
-    public Float getAnnualTurnover() {
+    public Long getAnnualTurnover() {
         return annualTurnover;
     }
 
     /**
-     * @return полное название организации или null, если данная информация
-     *         отсутствует
+     * @return число работников организации
+     */
+    public Long getEmployeesCount() {
+        return employeesCount;
+    }
+
+    /**
+     * @return полное название организации или null, если данная информация отсутствует
      */
     public String getFullName() {
         return fullName;
     }
 
     /**
-     * @return число работников организации
+     * @return рейтинг организации или null, если данная информация отсутствует
      */
-    public int getEmployeesCount() {
-        return employeesCount;
+    public Float getRating() {
+        return rating;
     }
 
     /**
@@ -78,11 +76,10 @@ public final class OrganizationTemplate implements Validatable, Comparable<Organ
     }
 
     /**
-     * @return официальный адрес организации или null, если данная информация
-     *         отсутствует
+     * @return почтовый адрес организации или null, если данная информация отсутствует
      */
-    public Address getOfficialAddress() {
-        return officialAddress;
+    public Address getPostalAddress() {
+        return postalAddress;
     }
 
     @Override
@@ -92,7 +89,7 @@ public final class OrganizationTemplate implements Validatable, Comparable<Organ
 
     @Override
     public int compareTo(Organization org) {
-        return getEmployeesCount() - org.getEmployeesCount();
+        return Long.compare(getEmployeesCount(), org.getEmployeesCount());
     }
 
     @Override
@@ -113,40 +110,48 @@ public final class OrganizationTemplate implements Validatable, Comparable<Organ
         if (fullName == null && org.fullName != null) {
             return false;
         }
+        if (rating == null && org.rating != null) {
+            return false;
+        }
         if (officialAddress == null && org.officialAddress != null) {
             return false;
         }
+        if (postalAddress == null && org.postalAddress != null) {
+            return false;
+        }
 
-        return name.equals(org.name)
-                && coordinates.equals(org.coordinates)
-                && annualTurnover.equals(org.annualTurnover)
+        return annualTurnover.equals(org.annualTurnover)
+                && employeesCount.equals(org.employeesCount)
                 && fullName.equals(org.fullName)
-                && employeesCount == org.employeesCount
+                && rating.equals(org.rating)
                 && type.equals(org.type)
-                && officialAddress.equals(org.officialAddress);
+                && officialAddress.equals(org.officialAddress)
+                && postalAddress.equals(org.postalAddress);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, coordinates, annualTurnover,
-                fullName, employeesCount, type, officialAddress);
+        return Objects.hash(annualTurnover, employeesCount, fullName,
+                rating, type, officialAddress, postalAddress);
     }
 
     @Override
     public String toString() {
         String s = "Шаблон Организации";
-        s += "\n\tНазвание: " + name;
-        s += "\n\tКоординаты: " + coordinates;
-        if (annualTurnover != null) {
-            s += "\n\tГодовой оборот: " + annualTurnover;
-        }
+        s += "\n\tГодовой оборот: " + annualTurnover;
+        s += "\n\tЧисло сотрудников: " + employeesCount;
         if (fullName != null) {
             s += "\n\tПолное название: " + fullName;
         }
-        s += "\n\tЧисло сотрудников: " + employeesCount;
+        if (rating != null) {
+            s += "\n\tРейтинг: " + rating;
+        }
         s += "\n\tТип: " + type;
         if (officialAddress != null) {
             s += "\n\tОфициальный адрес: " + officialAddress;
+        }
+        if (postalAddress != null) {
+            s += "\n\tПочтовый адрес: " + postalAddress;
         }
 
         return s;
@@ -156,55 +161,34 @@ public final class OrganizationTemplate implements Validatable, Comparable<Organ
      * Строитель экземпляров класса {@code OrganizationTemplate}.
      */
     public static final class Builder {
-        private String name;
-        private Coordinates coordinates;
-        private Float annualTurnover;
-        private String fullName;
-        private Integer employeesCount;
-        private OrganizationType type;
         private Address officialAddress;
+        private Long annualTurnover;
+        private Long employeesCount;
+        private String fullName;
+        private Float rating;
+        private OrganizationType type;
+        private Address postalAddress;
 
         /**
-         * Устанавливает название организации.
-         * 
-         * @param name Название организации
+         * Устанавливает официальный адрес организации.
+         *
+         * @param officialAddress Официальный адрес организации
          * @return Строитель экземпляров класса
-         * @throws InvalidFieldFormatException если поле не удовлетворяет формату
          */
-        public Builder setName(String name) throws InvalidFieldFormatException {
-            if (!OrganizationTemplateValidator.validateName(name)) {
-                throw new InvalidFieldFormatException("name");
-            }
-            this.name = name;
-
-            return this;
-        }
-
-        /**
-         * Устанавливает координаты организации.
-         * 
-         * @param coordinates Координаты организации
-         * @return Строитель экземпляров класса
-         * @throws InvalidFieldFormatException если поле не удовлетворяет формату
-         */
-        public Builder setCoordinates(Coordinates coordinates)
-                throws InvalidFieldFormatException {
-            if (!OrganizationTemplateValidator.validateCoordinates(coordinates)) {
-                throw new InvalidFieldFormatException("coordinates");
-            }
-            this.coordinates = coordinates;
+        public Builder setOfficialAddress(Address officialAddress) {
+            this.officialAddress = officialAddress;
 
             return this;
         }
 
         /**
          * Устанавливает годовой оборот организации.
-         * 
+         *
          * @param annualTurnover Годовой оборот организации
          * @return Строитель экземпляров класса
          * @throws InvalidFieldFormatException если поле не удовлетворяет формату
          */
-        public Builder setAnnualTurnover(Float annualTurnover)
+        public Builder setAnnualTurnover(Long annualTurnover)
                 throws InvalidFieldFormatException {
             if (!OrganizationTemplateValidator.validateAnnualTurnover(annualTurnover)) {
                 throw new InvalidFieldFormatException("annualTurnover");
@@ -215,25 +199,13 @@ public final class OrganizationTemplate implements Validatable, Comparable<Organ
         }
 
         /**
-         * Устанавливает полное название организации.
-         * 
-         * @param fullName Полное название организации
-         * @return Строитель экземпляров класса
-         */
-        public Builder setFullName(String fullName) {
-            this.fullName = fullName;
-
-            return this;
-        }
-
-        /**
          * Устанавливает число сотрудников организации.
-         * 
+         *
          * @param employeesCount Число сотрудников организации
          * @return Строитель экземпляров класса
          * @throws InvalidFieldFormatException если поле не удовлетворяет формату
          */
-        public Builder setEmployeesCount(int employeesCount)
+        public Builder setEmployeesCount(Long employeesCount)
                 throws InvalidFieldFormatException {
             if (!OrganizationTemplateValidator.validateEmployeesCount(employeesCount)) {
                 throw new InvalidFieldFormatException("employeesCount");
@@ -244,8 +216,40 @@ public final class OrganizationTemplate implements Validatable, Comparable<Organ
         }
 
         /**
+         * Устанавливает полное название организации.
+         *
+         * @param fullName Полное название организации
+         * @return Строитель экземпляров класса
+         * @throws InvalidFieldFormatException если поле не удовлетворяет формату
+         */
+        public Builder setFullName(String fullName) throws InvalidFieldFormatException {
+            if (!OrganizationTemplateValidator.validateFullName(fullName)) {
+                throw new InvalidFieldFormatException("fullName");
+            }
+            this.fullName = fullName;
+
+            return this;
+        }
+
+        /**
+         * Устанавливает рейтинг организации.
+         *
+         * @param rating Рейтинг организации
+         * @return Строитель экземпляров класса
+         * @throws InvalidFieldFormatException если поле не удовлетворяет формату
+         */
+        public Builder setRating(Float rating) throws InvalidFieldFormatException {
+            if (!OrganizationTemplateValidator.validateRating(rating)) {
+                throw new InvalidFieldFormatException("rating");
+            }
+            this.rating = rating;
+
+            return this;
+        }
+
+        /**
          * Устанавливает тип организации.
-         * 
+         *
          * @param type Тип организации
          * @return Строитель экземпляров класса
          * @throws InvalidFieldFormatException если поле не удовлетворяет формату
@@ -260,30 +264,29 @@ public final class OrganizationTemplate implements Validatable, Comparable<Organ
         }
 
         /**
-         * Устанавливает официальный адрес организации.
-         * 
-         * @param officialAddress Официальный адрес организации
+         * Устанавливает почтовый адрес организации.
+         *
+         * @param postalAddress Почтовый адрес организации
          * @return Строитель экземпляров класса
          */
-        public Builder setOfficialAddress(Address officialAddress) {
-            this.officialAddress = officialAddress;
+        public Builder setPostalAddress(Address postalAddress) {
+            this.postalAddress = postalAddress;
 
             return this;
         }
 
         /**
          * Проверяет, установлены ли все обязательные поля класса.
-         * 
+         *
          * @return {@code true}, если все обязательные поля класс установлены
          */
         public boolean isComplete() {
-            return name != null && coordinates != null
-                    && employeesCount != null && type != null;
+            return annualTurnover != null && employeesCount != null && type != null;
         }
 
         /**
          * Создает экземпляр класса {@code OrganizationTemplate}.
-         * 
+         *
          * @return экземпляр класса {@code OrganizationTemplate}
          * @throws IllegalStateException если не все обязательные поля класса были установлены
          */

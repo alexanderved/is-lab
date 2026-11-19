@@ -1,0 +1,7 @@
+.selected-row, .selected-row .rs-table-cell {
+    background-color: #e6f0ff !important;
+}
+
+.selected-row:hover, .selected-row:hover .rs-table-cell {
+    background-color: #d8e7ff !important;
+}

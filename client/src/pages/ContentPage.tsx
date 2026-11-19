@@ -6,229 +6,346 @@ import {
     Table,
     VStack,
     HStack,
-    Input
+    Input,
+    Nav,
+    Pagination,
 } from 'rsuite';
 import NavHeader from '../components/NavHeader';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import * as http from '../utils/http';
 import type { SortType } from 'rsuite/esm/Table';
 import { getUserInfo, isLoggedOut } from '../utils/auth';
 import AuthContext from '../AuthContext';
+import { onUpdate, startUpdates, stopUpdates } from '../utils/updates-ws';
 
 const { Column, HeaderCell, Cell } = Table;
 
-export type Coordinates = {
-    x: number,
-    y: number
-};
-
 export type Location = {
-    x: number,
-    y: number,
-    z: number
+    x: number;
+    y: number;
+    z: number;
+    name: string;
 };
 
 export type Address = {
-    street: string,
-    town: Location
+    street: string | null;
+    town: Location | null;
 };
 
-export type Organization = {
-    id: number,
-    name: string,
-    coordinates: Coordinates,
-    creationDate: string,
-    annualTurnover: number,
-    fullName: string,
-    employeesCount: number,
-    type: string,
-    officialAddres: Address,
-    userID: number,
+export type Coordinates = {
+    x: number;
+    y: number;
 };
+
+type TabKey = 'organization' | 'worker' | 'person';
+
+type ColumnDef = {
+    key: string;
+    label: string;
+    width: number;
+    align?: 'left' | 'center' | 'right';
+    render?: (row: any) => React.ReactNode;
+};
+
+type TabConfig = {
+    key: TabKey;
+    label: string;
+    endpoint: string;
+    columns: ColumnDef[];
+};
+
+const formatAddress = (addr: Address | null | undefined): string => {
+    if (!addr) return '-';
+    const town = addr.town;
+    const townPart = town ? `, (${town.x}, ${town.y}, ${town.z})` : '';
+    return `${addr.street ?? ''}${townPart}`.trim() || '-';
+};
+
+const TAB_CONFIGS: TabConfig[] = [
+    {
+        key: 'worker',
+        label: 'Worker',
+        endpoint: 'workers',
+        columns: [
+            { key: 'id', label: 'Id', width: 60, align: 'center' },
+            { key: 'name', label: 'Name', width: 150 },
+            { key: 'coordinates', label: 'Coordinates', width: 140,
+                render: (r) => r.coordinates ? `(${r.coordinates.x}, ${r.coordinates.y})` : '-' },
+            { key: 'creationDate', label: 'Creation Date', width: 170,
+                render: (r) => r.creationDate ? new Date(r.creationDate).toLocaleString() : '-' },
+            { key: 'organization', label: 'Organization', width: 130,
+                render: (r) => r.organization ? `#${r.organization.id}` : '-' },
+            { key: 'salary', label: 'Salary', width: 110 },
+            { key: 'rating', label: 'Rating', width: 100 },
+            { key: 'position', label: 'Position', width: 180 },
+            { key: 'status', label: 'Status', width: 220 },
+            { key: 'person', label: 'Person', width: 100,
+                render: (r) => r.person ? `#${r.person.id}` : '-' },
+            { key: 'userID', label: 'Owner', width: 80 },
+        ],
+    },
+    {
+        key: 'organization',
+        label: 'Organization',
+        endpoint: 'organizations',
+        columns: [
+            { key: 'id', label: 'Id', width: 60, align: 'center' },
+            { key: 'annualTurnover', label: 'Annual Turnover', width: 150 },
+            { key: 'employeesCount', label: 'Employees Count', width: 150 },
+            { key: 'fullName', label: 'Full Name', width: 180 },
+            { key: 'rating', label: 'Rating', width: 100 },
+            { key: 'type', label: 'Type', width: 240 },
+            { key: 'officialAddress', label: 'Official Address', width: 260,
+                render: (r) => formatAddress(r.officialAddress) },
+            { key: 'postalAddress', label: 'Postal Address', width: 260,
+                render: (r) => formatAddress(r.postalAddress) },
+            { key: 'userID', label: 'Owner', width: 80 },
+        ],
+    },
+    {
+        key: 'person',
+        label: 'Person',
+        endpoint: 'persons',
+        columns: [
+            { key: 'id', label: 'Id', width: 60, align: 'center' },
+            { key: 'eyeColor', label: 'Eye Color', width: 130 },
+            { key: 'hairColor', label: 'Hair Color', width: 130 },
+            { key: 'location', label: 'Location', width: 220,
+                render: (r) => r.location
+                    ? `${r.location.name} (${r.location.x}, ${r.location.y}, ${r.location.z})`
+                    : '-' },
+            { key: 'birthday', label: 'Birthday', width: 130,
+                render: (r) => r.birthday ? new Date(r.birthday).toLocaleDateString() : '-' },
+            { key: 'weight', label: 'Weight', width: 100 },
+            { key: 'nationality', label: 'Nationality', width: 150 },
+            { key: 'userID', label: 'Owner', width: 80 },
+        ],
+    },
+];
 
 const ContentPage = () => {
     if (isLoggedOut()) {
-        http.redirect("/signin");
-
+        http.redirect('/signin');
         return <></>;
     }
 
-    const TABLE_HEIGHT = 800;
     const ROW_HEIGHT = 46;
-    const LOAD_MORE_DELTA = 100;
-    const PER_PAGE_NUMBER = Math.ceil(TABLE_HEIGHT / ROW_HEIGHT);
+    const PAGE_SIZE = 15;
+    const TABLE_HEIGHT = ROW_HEIGHT * (PAGE_SIZE + 1) - 6;
 
     const authChecked = useContext(AuthContext);
-    const [sortColumn, setSortColumn] = useState("id");
-    const [sortOrder, setSortOrder] = useState("ASC");
-    const [nameFilter, setNameFilter] = useState("");
-    const [pageCount, setPageCount] = useState(3);
-    const [organizations, setOrganizations] = useState([] as Organization[]);
+    const [activeTab, setActiveTab] = useState<TabKey>('worker');
+    const [sortColumn, setSortColumn] = useState('id');
+    const [sortOrder, setSortOrder] = useState('ASC');
+    const [filter, setFilter] = useState('');
+    const [page, setPage] = useState(1);
+    const [total, setTotal] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const [rows, setRows] = useState<any[]>([]);
+    const [selectedRow, setSelectedRow] = useState<any | null>(null);
+
+    const currentTab = TAB_CONFIGS.find((t) => t.key === activeTab)!;
+    const tableWidth = currentTab.columns.reduce((s, c) => s + c.width, 0);
 
     const loadData = () => {
-        if (!authChecked) {
-            setOrganizations([]);
-            return;
-        }
+        if (!authChecked) return;
+        setLoading(true);
 
-        http.requestAuthorized(`/organizations?\
-order=${sortOrder}&\
-column=${sortColumn}&\
-per-page-number=${PER_PAGE_NUMBER}&\
-page-count=${pageCount}&\
-filter=${nameFilter}`, { method: "GET" })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error(response.statusText);
+        const pageParams = new URLSearchParams({
+            order: sortOrder,
+            column: sortColumn,
+            pageNumber: String(page),
+            perPageNumber: String(PAGE_SIZE),
+            pageCount: '1',
+            filter,
+        });
+
+        const countParams = new URLSearchParams({
+            column: sortColumn,
+            filter,
+        });
+
+        Promise.all([
+            http.requestAuthorized(
+                `/${currentTab.endpoint}?${pageParams.toString()}`,
+                { method: 'GET' },
+            ).then((r) => (r.ok ? r.json() : Promise.reject(r))),
+            http.requestAuthorized(
+                `/${currentTab.endpoint}/count?${countParams.toString()}`,
+                { method: 'GET' },
+            ).then((r) => (r.ok ? r.json() : { count: 0 })),
+        ])
+            .then(([data, countData]: [any[], number]) => {
+                setRows(data);
+                setTotal(countData);
+                console.log(countData)
+
+                const totalPages = Math.max(1, Math.ceil(countData / PAGE_SIZE));
+                if (page > totalPages) {
+                    setPage(1);
+                    return;
                 }
 
-                return response.json();
+                setSelectedRow((prev: any) =>
+                    prev && data.some((r) => r?.id === prev.id) ? prev : null,
+                );
             })
-            .then((data: Organization[]) => setOrganizations(data));
+            .catch((e) => {
+                console.warn('Failed to load page:', e);
+            })
+            .finally(() => setLoading(false));
     };
 
     const handleSort = (column: string, order?: SortType) => {
-        setSortOrder(order?.toString().toUpperCase() || "ASC");
+        setSortOrder(order?.toString().toUpperCase() || 'ASC');
         setSortColumn(column);
+        setPage(1);
     };
 
-    const handleScroll = (_x: number, y: number) => {
-        const dataHeight = organizations.length * ROW_HEIGHT;
-        const top = Math.abs(y);
-
-        if (dataHeight - top - TABLE_HEIGHT < LOAD_MORE_DELTA
-                && pageCount * PER_PAGE_NUMBER * ROW_HEIGHT <= dataHeight) {
-            setPageCount(pageCount + 1);
-        }
+    const handleFilterChange = (v: string) => {
+        setFilter(v);
+        setPage(1);
     };
 
-    const handleFilter = (filter: string) => {
-        setNameFilter(filter);
+    const handleTabChange = (key: string) => {
+        const next = key as TabKey;
+        if (next === activeTab) return;
+        setActiveTab(next);
+        setSelectedRow(null);
+        setSortColumn('id');
+        setSortOrder('ASC');
+        setFilter('');
+        setPage(1);
     };
 
-    useEffect(() => setPageCount(3), []);
-    useEffect(loadData, [authChecked, sortColumn, sortOrder, nameFilter, pageCount]);
+    const canInteract = (row: any | null) => {
+        if (!row) return false;
+        const userInfo = getUserInfo();
+        return row.userID === userInfo?.id
+            || (userInfo?.role === 'ROLE_ADMIN' && row.userID !== 0)
+            || userInfo?.role === 'ROLE_SUPERADMIN';
+    };
 
-    return <>
+    const handleUpdate = () => {
+        if (!selectedRow || !canInteract(selectedRow)) return;
+        http.redirect(`/update/${currentTab.key}/${selectedRow.id}`);
+    };
+
+    const handleRemove = () => {
+        if (!selectedRow || !canInteract(selectedRow)) return;
+
+        http.requestAuthorized(`/${currentTab.endpoint}/${selectedRow.id}`, {
+            method: 'DELETE',
+        })
+            .then((response) => {
+                if (!response.ok) throw new Error(response.statusText);
+            })
+            .then(() => {
+                setSelectedRow(null);
+                loadData();
+            });
+    };
+
+    useEffect(loadData, [authChecked, activeTab, sortColumn, sortOrder, filter, page]);
+
+    const loadDataRef = useRef(loadData);
+    useEffect(() => { loadDataRef.current = loadData; }, [loadData]);
+
+    useEffect(() => {
+        startUpdates();
+        const unsubscribe = onUpdate(() => loadDataRef.current());
+        return () => {
+            unsubscribe();
+            stopUpdates();
+        };
+    }, []);
+
+    return (
         <Container>
             <Header>
                 <NavHeader />
             </Header>
             <Content style={{ padding: '2em' }}>
                 <VStack alignItems="center" justifyContent="center" spacing={20}>
+                    <Nav appearance="tabs" activeKey={activeTab} onSelect={handleTabChange}>
+                        {TAB_CONFIGS.map((t) => (
+                            <Nav.Item key={t.key} eventKey={t.key}>
+                                {t.label}
+                            </Nav.Item>
+                        ))}
+                    </Nav>
+
                     <Table
-                        virtualized
                         height={TABLE_HEIGHT}
                         rowHeight={ROW_HEIGHT}
-                        width={1370}
-                        data={organizations}
+                        width={tableWidth}
+                        data={rows}
                         sortColumn={sortColumn}
                         sortType={sortOrder.toLowerCase() as SortType}
                         onSortColumn={handleSort}
-                        shouldUpdateScroll={false}
-                        onScroll={handleScroll}
+                        rowClassName={(rowData) =>
+                            rowData && rowData.id === selectedRow?.id ? 'selected-row' : ''
+                        }
+                        onRowClick={(rowData) => {
+                            if (rowData) setSelectedRow(rowData);
+                        }}
                         hover
                         bordered
+                        loading={loading}
                     >
-                        <Column width={60} align="center" fixed fullText sortable>
-                            <HeaderCell>Id</HeaderCell>
-                            <Cell dataKey="id" />
-                        </Column>
-
-                        <Column width={150} fixed fullText sortable>
-                            <HeaderCell>Name</HeaderCell>
-                            <Cell dataKey="name" />
-                        </Column>
-
-                        <Column width={150} fixed fullText>
-                            <HeaderCell>Coordinates</HeaderCell>
-                            <Cell dataKey="coordinates">
-                                {(rowData) => `(${rowData.coordinates.x}, ${rowData.coordinates.y})`}
-                            </Cell>
-                        </Column>
-
-                        <Column width={160} fixed fullText sortable>
-                            <HeaderCell>Creation Date</HeaderCell>
-                            <Cell dataKey="creationDate">
-                                {(rowData) => new Date(Date.parse(rowData.creationDate)).toLocaleString()}
-                            </Cell>
-                        </Column>
-
-                        <Column width={150} fixed fullText sortable>
-                            <HeaderCell>Annual Turnover</HeaderCell>
-                            <Cell dataKey="annualTurnover" />
-                        </Column>
-
-                        <Column width={150} fixed fullText sortable>
-                            <HeaderCell>Full Name</HeaderCell>
-                            <Cell dataKey="fullName" />
-                        </Column>
-
-                        <Column width={150} fixed fullText sortable>
-                            <HeaderCell>Employees Count</HeaderCell>
-                            <Cell dataKey="employeesCount" />
-                        </Column>
-
-                        <Column width={150} fixed fullText sortable>
-                            <HeaderCell>Type</HeaderCell>
-                            <Cell dataKey="type" />
-                        </Column>
-
-                        <Column width={150} fixed fullText sortable>
-                            <HeaderCell>Official Address</HeaderCell>
-                            <Cell dataKey="officialAddress">
-                                {(rowData) => `${rowData.officialAddress.street}, (${rowData.officialAddress.town.x},
-                                    ${rowData.officialAddress.town.y}, ${rowData.officialAddress.town.z})`}
-                            </Cell>
-                        </Column>
-
-                        <Column width={100} fixed align="center">
-                            <HeaderCell> </HeaderCell>
-
-                            <Cell style={{ padding: '6px' }}>
-                                {(rowData) => {
-                                    const userInfo = getUserInfo();
-
-                                    if (rowData.userID == userInfo?.id
-                                        || (userInfo?.role == "ROLE_ADMIN" && rowData.userID != 0)
-                                        || userInfo?.role == "ROLE_SUPERADMIN"
-                                    ) {
-                                        return (
-                                            <Button appearance="link" onClick={
-                                                () => {
-                                                    http.requestAuthorized(`/organizations/${rowData.id}`, {
-                                                            method: "DELETE"
-                                                        })
-                                                        .then((response) => {
-                                                            if (!response.ok) {
-                                                                throw new Error(response.statusText);
-                                                            }
-                                                        })
-                                                        .then(loadData);
-                                                }
-                                            }>
-                                                Remove
-                                            </Button>
-                                        );
-                                    } else {
-                                        return (
-                                            <Button appearance="link" disabled>
-                                                Remove
-                                            </Button>
-                                        );
-                                    }
-                                }}
-                            </Cell>
-                        </Column>
+                        {currentTab.columns.map((col) => (
+                            <Column
+                                key={col.key}
+                                width={col.width}
+                                align={col.align ?? 'left'}
+                                fullText
+                                sortable
+                            >
+                                <HeaderCell>{col.label}</HeaderCell>
+                                <Cell dataKey={col.key}>
+                                    {col.render ? (row: any) => col.render!(row) : undefined}
+                                </Cell>
+                            </Column>
+                        ))}
                     </Table>
-                    <HStack alignItems="center" justifyContent="center" spacing={15} style={{ width: '1370px' }}>
-                        <Button href="/add">Add</Button>
-                        <Input placeholder="Organization Name" onChange={handleFilter}/>
+
+                    <HStack alignItems="center" justifyContent="space-between" spacing={15} style={{ width: `${tableWidth}px` }}>
+                        <HStack alignItems="center" justifyContent="center" spacing={15} style={{ width: `${tableWidth / 3 * 2}px` }}>
+                            <Button href={`/add/${activeTab}`}>Add</Button>
+                            <Button disabled={!canInteract(selectedRow)} onClick={handleUpdate}>
+                                Edit
+                            </Button>
+                            <Button
+                                color="red"
+                                appearance="primary"
+                                disabled={!canInteract(selectedRow)}
+                                onClick={handleRemove}
+                            >
+                                Remove
+                            </Button>
+                            <Input placeholder="Filter" onChange={handleFilterChange} />
+                        </HStack>
+
+                        <Pagination
+                            prev
+                            next
+                            first
+                            last
+                            ellipsis
+                            boundaryLinks
+                            maxButtons={3}
+                            layout={['pager', 'skip']}
+                            disabled={loading}
+                            total={total}
+                            limit={PAGE_SIZE}
+                            activePage={page}
+                            onChangePage={setPage}
+                        />
                     </HStack>
                 </VStack>
             </Content>
         </Container>
-    </>
+    );
 };
 
 export default ContentPage;

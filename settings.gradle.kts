@@ -1,3 +1,3 @@
-rootProject.name = "proglab-sem2"
+rootProject.name = "is-lab"
 include("common")
 include("server")

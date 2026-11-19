@@ -11,6 +11,16 @@ const HomeButton = ({ isLoggedOut }: { isLoggedOut: boolean }) => {
     );
 };
 
+const OperationsButton = ({ isLoggedOut }: { isLoggedOut: boolean }) => {
+    if (!isLoggedOut) {
+        return <Nav.Item href="/operations">Operations</Nav.Item>;
+    }
+
+    return (
+        <></>
+    );
+};
+
 const AdminPanelButton = ({ isAdmin }: { isAdmin: boolean }) => {
     if (!isAdmin) {
         return null;
@@ -42,6 +52,7 @@ const NavHeader = () => {
         <Navbar>
             <Nav>
                 <HomeButton isLoggedOut={isLoggedOut()} />
+                <OperationsButton isLoggedOut={isLoggedOut()} />
             </Nav>
             <Nav pullRight>
                 <AdminPanelButton isAdmin={isAdmin()} />

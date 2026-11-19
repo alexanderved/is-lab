@@ -9,6 +9,8 @@ import { updateUserInfo } from './utils/auth.ts';
 import AuthContext from './AuthContext.tsx';
 import UserInfoPage from './pages/UserInfoPage.tsx';
 import AddPage from './pages/AddPage.tsx';
+import UpdatePage from './pages/UpdatePage.tsx';
+import OperationsPage from "./pages/OperationsPage.tsx";
 
 const App = () => {
     const [authChecked, setAuthChecked] = useState(false);
@@ -30,7 +32,9 @@ const App = () => {
                     <Route path='/signin' Component={SignInPage}></Route>
                     <Route path='/signup' Component={SignUpPage}></Route>
                     <Route path='/users/:username' Component={UserInfoPage}></Route>
-                    <Route path='/add' Component={AddPage}></Route>
+                    <Route path='/add/:type' Component={AddPage}></Route>
+                    <Route path='/update/:type/:id' Component={UpdatePage}></Route>
+                    <Route path="/operations" Component={OperationsPage}></Route>
                 </Routes>
             </AuthContext.Provider>
         </>

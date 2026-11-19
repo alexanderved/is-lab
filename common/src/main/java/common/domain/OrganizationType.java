@@ -1,12 +1,7 @@
 package common.domain;
 
-/**
- * Тип организации.
- */
 public enum OrganizationType {
-    COMMERCIAL,
-    PUBLIC,
-    TRUST,
+    GOVERNMENT,
     PRIVATE_LIMITED_COMPANY,
-    OPEN_JOINT_STOCK_COMPANY;
+    OPEN_JOINT_STOCK_COMPANY
 }

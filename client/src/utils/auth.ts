@@ -16,9 +16,6 @@ export type LoginRequest = {
 
 export type RegistrationRequest = {
     username: string,
-    email: string,
-    firstName: string,
-    secondName: string,
     password: string,
 };
 
@@ -120,9 +117,15 @@ export const login = async (req: LoginRequest) => {
 };
 
 export const refresh = async () => {
-    const response = await http.request("/auth/refresh", {
-        method: "POST",
-        body: getRefreshToken(),
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+        throw new Error('No refresh token');
+    }
+
+    const response = await http.request('/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
     });
 
     if (!response.ok) {
@@ -130,7 +133,6 @@ export const refresh = async () => {
     }
 
     const tokens: TokenPair = await response.json();
-
     setTokenPair(tokens);
     await updateUserInfo();
 };

@@ -2,25 +2,34 @@ package server.controller;
 
 import common.exceptions.UserNotFoundException;
 import common.network.responses.SuccessResponse;
-import org.springframework.web.bind.annotation.*;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import server.exceptions.RepositoryAccessFailedException;
 import server.service.admin.AdminService;
-import server.service.auth.AuthService;
 import server.service.user.Role;
-import server.service.user.User;
 
-@RestController
-@RequestMapping("/api/admin")
-@CrossOrigin
+@Path("/admin")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@RolesAllowed({"admin", "superadmin"})
 public class AdminController {
-    private final AdminService adminService;
+    @Inject
+    private AdminService adminService;
 
-    public AdminController(AdminService adminService) {
-        this.adminService = adminService;
+    public AdminController() {
+
     }
 
-    @PostMapping("/appoint/{id}")
-    public SuccessResponse appoint(@PathVariable int id)
+    @POST
+    @Path("/appoint/{id}")
+    public Response appoint(@PathParam("id") int id)
             throws UserNotFoundException, RepositoryAccessFailedException {
         adminService.changeUserRole(id, (role) ->
                 switch (role) {
@@ -29,11 +38,12 @@ public class AdminController {
                     default -> role;
                 });
 
-        return new SuccessResponse();
+        return Response.ok(new SuccessResponse()).build();
     }
 
-    @PostMapping("/block/{id}")
-    public SuccessResponse block(@PathVariable int id)
+    @POST
+    @Path("/block/{id}")
+    public Response block(@PathParam("id") int id)
             throws UserNotFoundException, RepositoryAccessFailedException {
         adminService.changeUserRole(id, (role) ->
                 switch (role) {
@@ -42,6 +52,6 @@ public class AdminController {
                     default -> Role.ROLE_BLOCKED;
                 });
 
-        return new SuccessResponse();
+        return Response.ok(new SuccessResponse()).build();
     }
 }

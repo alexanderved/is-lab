@@ -6,8 +6,7 @@ import {
     Panel,
     Form,
     HStack,
-    Button,
-    Avatar
+    Button
 } from 'rsuite';
 import NavHeader from '../components/NavHeader';
 import { useContext, useEffect, useState } from 'react';
@@ -16,7 +15,6 @@ import { findByName, type UserInfo } from '../utils/user';
 import { getUserInfo } from '../utils/auth';
 import AuthContext from '../AuthContext';
 import * as http from '../utils/http';
-import { download } from '../utils/file';
 
 const UserInfoPage = () => {
     const authChecked = useContext(AuthContext);
@@ -24,12 +22,8 @@ const UserInfoPage = () => {
     const [formValue, setFormValue] = useState({
         id: 0,
         username: "",
-        email: "",
-        firstName: "",
-        secondName: "",
         role: "",
     } as UserInfo);
-    const [avatarImage, setAvatarImage] = useState(null as string | null);
 
     const blockUser = () => {
         if (!authChecked) {
@@ -87,7 +81,7 @@ const UserInfoPage = () => {
             return <></>;
         }
 
-        let disabledButtons = selfInfo?.id == formValue.id ? true : false;
+        let disabledButtons = selfInfo?.id == formValue.id;
         if (selfInfo?.role == "ROLE_ADMIN") {
             disabledButtons = disabledButtons || formValue.role == "ROLE_SUPERADMIN";
             return (<>
@@ -129,12 +123,6 @@ const UserInfoPage = () => {
                     setFormValue(userInfo);
                 }
             });
-
-        download(username)
-            .then((data) => {
-                return data;
-            })
-            .then((data) => setAvatarImage(data));
     }, [authChecked]);
 
     return <>
@@ -142,31 +130,13 @@ const UserInfoPage = () => {
             <Header>
                 <NavHeader />
             </Header>
-            <Content style={{ padding: '10em' }}>
+            <Content style={{ padding: '18em' }}>
                 <VStack alignItems="center" justifyContent="center" style={{ height: '100%' }} spacing={20}>
                     <Panel bordered style={{ width: 400 }}>
                         <Form fluid formValue={formValue} readOnly>
-                            {avatarImage ? (<Avatar src={avatarImage} size="xl" bordered />)
-                                         : (<Avatar size="xl" bordered />)}
-
                             <Form.Group>
                                 <Form.ControlLabel>Username</Form.ControlLabel>
                                 <Form.Control name="username" />
-                            </Form.Group>
-
-                            <Form.Group>
-                                <Form.ControlLabel>Email</Form.ControlLabel>
-                                <Form.Control name="email" />
-                            </Form.Group>
-
-                            <Form.Group>
-                                <Form.ControlLabel>First Name</Form.ControlLabel>
-                                <Form.Control name="firstName" />
-                            </Form.Group>
-
-                            <Form.Group>
-                                <Form.ControlLabel>Second Name</Form.ControlLabel>
-                                <Form.Control name="secondName" />
                             </Form.Group>
 
                             <Form.Group>

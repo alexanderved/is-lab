@@ -3,140 +3,174 @@ package server.model;
 import common.domain.*;
 import common.exceptions.InvalidFieldFormatException;
 import jakarta.persistence.*;
-import org.hibernate.annotations.Check;
 
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "organizations")
-@Check(constraints = "(street IS NULL) = (town IS NULL)")
 public class Organization {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="id", nullable=false, unique=true)
+    @Column(name = "id", nullable = false, unique = true)
     private int id;
 
-    @Column(name = "name", nullable = false)
-    @Check(constraints = "LENGTH(name) > 0")
-    private String name;
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "street",    column = @Column(name = "official_street", length = 112)),
+            @AttributeOverride(name = "town.x",    column = @Column(name = "official_town_x")),
+            @AttributeOverride(name = "town.y",    column = @Column(name = "official_town_y")),
+            @AttributeOverride(name = "town.z",    column = @Column(name = "official_town_z")),
+            @AttributeOverride(name = "town.name", column = @Column(name = "official_town_name"))
+    })
+    private Address officialAddress;
 
-    @Column(name = "coordinates", nullable = false)
-    private Coordinates coordinates;
+    @Column(
+            name = "annual_turnover",
+            nullable = false,
+            check = @CheckConstraint(constraint = "annual_turnover > 0")
+    )
+    private Long annualTurnover;
 
-    @Column(name = "creation_date", nullable = false)
-    private OffsetDateTime creationDate;
+    @Column(
+            name = "employees_count",
+            nullable = false,
+            check = @CheckConstraint(constraint = "employees_count > 0")
+    )
+    private Long employeesCount;
 
-    @Column(name = "annual_turnover")
-    @Check(constraints = "annual_turnover > 0")
-    private Float annualTurnover;
-
-    @Column(name = "full_name")
+    @Column(
+            name = "full_name",
+            check = @CheckConstraint(constraint = "full_name IS NULL OR LENGTH(full_name) > 0")
+    )
     private String fullName;
 
-    @Column(name = "employees_count", nullable = false)
-    @Check(constraints = "employees_count > 0")
-    private int employeesCount;
+    @Column(
+            name = "rating",
+            check = @CheckConstraint(constraint = "rating IS NULL OR rating > 0")
+    )
+    private Float rating;
 
     @Column(name = "type", nullable = false)
     @Enumerated(EnumType.STRING)
     private OrganizationType type;
 
-    @Column(name = "street")
-    @Check(constraints = "LENGTH(street) > 0")
-    private String street;
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "street",    column = @Column(name = "postal_street", length = 112)),
+            @AttributeOverride(name = "town.x",    column = @Column(name = "postal_town_x")),
+            @AttributeOverride(name = "town.y",    column = @Column(name = "postal_town_y")),
+            @AttributeOverride(name = "town.z",    column = @Column(name = "postal_town_z")),
+            @AttributeOverride(name = "town.name", column = @Column(name = "postal_town_name"))
+    })
+    private Address postalAddress;
 
-    @Column(name = "town")
-    private Location town;
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @OneToMany(
+            mappedBy = "organization",
+            cascade = CascadeType.REMOVE,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    private List<Worker> workers = new ArrayList<>();
 
     public Organization() {
 
     }
 
     public Organization(OrganizationTemplate template, User user) {
-        System.out.println(template.getName());
-        name = template.getName();
-        coordinates = template.getCoordinates();
-        creationDate = ZonedDateTime.now().toOffsetDateTime();
+        officialAddress = template.getOfficialAddress() == null
+                ? null : new Address(template.getOfficialAddress());
         annualTurnover = template.getAnnualTurnover();
-        fullName = template.getFullName();
         employeesCount = template.getEmployeesCount();
+        fullName = template.getFullName();
+        rating = template.getRating();
         type = template.getType();
-        street = template.getOfficialAddress().getStreet();
-        town = template.getOfficialAddress().getTown();
+        postalAddress = template.getPostalAddress() == null
+                ? null : new Address(template.getPostalAddress());
+        this.user = user;
+    }
+
+    public Organization(common.domain.Organization org, User user) {
+        id = org.getId();
+        officialAddress = org.getOfficialAddress() == null
+                ? null : new Address(org.getOfficialAddress());
+        annualTurnover = org.getAnnualTurnover();
+        employeesCount = org.getEmployeesCount();
+        fullName = org.getFullName();
+        rating = org.getRating();
+        type = org.getType();
+        postalAddress = org.getPostalAddress() == null
+                ? null : new Address(org.getPostalAddress());
         this.user = user;
     }
 
     public void update(OrganizationTemplate template) {
-        name = template.getName();
-        coordinates = template.getCoordinates();
+        officialAddress = template.getOfficialAddress() == null
+                ? null : new Address(template.getOfficialAddress());
         annualTurnover = template.getAnnualTurnover();
-        fullName = template.getFullName();
         employeesCount = template.getEmployeesCount();
+        fullName = template.getFullName();
+        rating = template.getRating();
         type = template.getType();
-        street = template.getOfficialAddress().getStreet();
-        town = template.getOfficialAddress().getTown();
+        postalAddress = template.getPostalAddress() == null
+                ? null : new Address(template.getPostalAddress());
     }
 
     public common.domain.Organization toDomain() throws InvalidFieldFormatException {
         OrganizationTemplate template = new OrganizationTemplate.Builder()
-                .setName(name)
-                .setCoordinates(coordinates)
+                .setOfficialAddress(officialAddress == null ? null : officialAddress.toDomain())
                 .setAnnualTurnover(annualTurnover)
-                .setFullName(fullName)
                 .setEmployeesCount(employeesCount)
+                .setFullName(fullName)
+                .setRating(rating)
                 .setType(type)
-                .setOfficialAddress(new Address(street, town))
+                .setPostalAddress(postalAddress == null ? null : postalAddress.toDomain())
                 .build();
 
-        return new common.domain.Organization(id, creationDate.toZonedDateTime(), user.getId(), template);
+        return new common.domain.Organization(id, user.getId(), template);
     }
 
     public int getId() {
         return id;
     }
 
-    public String getName() {
-        return name;
+    public Address getOfficialAddress() {
+        return officialAddress;
     }
 
-    public Coordinates getCoordinates() {
-        return coordinates;
-    }
-
-    public OffsetDateTime getCreationDate() {
-        return creationDate;
-    }
-
-    public Float getAnnualTurnover() {
+    public Long getAnnualTurnover() {
         return annualTurnover;
+    }
+
+    public Long getEmployeesCount() {
+        return employeesCount;
     }
 
     public String getFullName() {
         return fullName;
     }
 
-    public int getEmployeesCount() {
-        return employeesCount;
+    public Float getRating() {
+        return rating;
     }
 
     public OrganizationType getType() {
         return type;
     }
 
-    public String getStreet() {
-        return street;
-    }
-
-    public Location getTown() {
-        return town;
+    public Address getPostalAddress() {
+        return postalAddress;
     }
 
     public User getUser() {
         return user;
+    }
+
+    public List<Worker> getWorkers() {
+        return workers;
     }
 }

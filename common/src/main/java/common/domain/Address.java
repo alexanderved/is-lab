@@ -7,47 +7,33 @@ import common.exceptions.InvalidFieldFormatException;
 import common.utils.Validatable;
 import common.utils.validators.AddressValidator;
 
-/**
- * Класс адреса.
- */
 public final class Address implements Validatable, Serializable {
-    private final String street; // Строка не может быть пустой, Поле может быть null
-    private final Location town; // Поле не может быть null
+    private final String street; // Длина строки не должна быть больше 112, Поле может быть null
+    private final Location town; // Поле может быть null
 
     private Address() {
         street = null;
         town = null;
     }
 
-    /**
-     * @param street Название улицы
-     * @param town Координаты города
-     * @throws InvalidFieldFormatException если аргументы не удовлетворяют ожидаемому формату
-     */
     public Address(String street, Location town) throws InvalidFieldFormatException {
         if (!AddressValidator.validateStreet(street)) {
             throw new InvalidFieldFormatException("street",
-                    "Поле `street` не может быть пустой строкой");
+                    "Длина строки в поле `street` не должна быть больше 112");
         }
         this.street = street;
 
         if (!AddressValidator.validateTown(town)) {
             throw new InvalidFieldFormatException("town",
-                    "Поле `town` не может null");
+                    "Поле `town` не валидно");
         }
         this.town = town;
     }
 
-    /**
-     * @return название улицы
-     */
     public String getStreet() {
         return street;
     }
 
-    /**
-     * @return координаты города.
-     */
     public Location getTown() {
         return town;
     }
@@ -79,6 +65,14 @@ public final class Address implements Validatable, Serializable {
 
     @Override
     public String toString() {
-        return "Улица " + street + ", " + "Город на координатах " + town.toString();
+        if (street == null && town == null) {
+            return "";
+        } else if (street != null && town == null) {
+            return street;
+        } else if (street == null) {
+            return town.toString();
+        } else {
+            return street + ", " + town.toString();
+        }
     }
 }

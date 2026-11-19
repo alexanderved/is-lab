@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Organizations Service</web-resource-name>
+            <description/>
+            <url-pattern>/api/organizations/*</url-pattern>
+            <http-method-omission>OPTIONS</http-method-omission>
+        </web-resource-collection>
+
+        <web-resource-collection>
+            <web-resource-name>Persons Service</web-resource-name>
+            <description/>
+            <url-pattern>/api/persons/*</url-pattern>
+            <http-method-omission>OPTIONS</http-method-omission>
+        </web-resource-collection>
+
+        <web-resource-collection>
+            <web-resource-name>Workers Service</web-resource-name>
+            <description/>
+            <url-pattern>/api/workers/*</url-pattern>
+            <http-method-omission>OPTIONS</http-method-omission>
+        </web-resource-collection>
+
+        <web-resource-collection>
+            <web-resource-name>Special Operations Service</web-resource-name>
+            <description/>
+            <url-pattern>/api/operations/*</url-pattern>
+            <http-method-omission>OPTIONS</http-method-omission>
+        </web-resource-collection>
+
+        <web-resource-collection>
+            <web-resource-name>Users Service</web-resource-name>
+            <description/>
+            <url-pattern>/api/users/*</url-pattern>
+            <http-method-omission>OPTIONS</http-method-omission>
+            <http-method-omission>GET</http-method-omission>
+        </web-resource-collection>
+
+        <web-resource-collection>
+            <web-resource-name>Update Service</web-resource-name>
+            <url-pattern>/api/update/*</url-pattern>
+            <http-method-omission>OPTIONS</http-method-omission>
+        </web-resource-collection>
+
+        <auth-constraint>
+            <role-name>user</role-name>
+        </auth-constraint>
+    </security-constraint>
+
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Admin Service</web-resource-name>
+            <description/>
+            <url-pattern>/api/admin/*</url-pattern>
+            <http-method-omission>OPTIONS</http-method-omission>
+        </web-resource-collection>
+
+        <auth-constraint>
+            <role-name>admin</role-name>
+        </auth-constraint>
+    </security-constraint>
+</web-app>

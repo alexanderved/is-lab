@@ -5,29 +5,53 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.stereotype.Service;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import server.exceptions.MalformedTokenException;
 import server.service.user.Role;
 import server.service.user.User;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
+@ApplicationScoped
 public class TokenService {
-    private static final String SECRET =
-            "d2Zza2VqeG93bmdwa3drbWFzbGtma3NhbWZsa3NrYWxrZm1rbGFmbWtsYWZsa2Fz";
+    private static final int MIN_SECRET_BYTES = 32;
+
     private static final Duration ACCESS_EXPIRATION_TIME = Duration.ofMinutes(5);
     private static final Duration REFRESH_EXPIRATION_TIME = Duration.ofDays(30);
-    private static final String ISSUER = "proglab";
+    private static final String ISSUER = "is-lab";
 
-    private final SecretKey key;
+    @Inject
+    @ConfigProperty(name = "jwt.secret")
+    String secret;
+
+    private SecretKey key;
 
     public TokenService() {
-        key = Keys.hmacShaKeyFor(SECRET.getBytes());
+
+    }
+
+    @PostConstruct
+    void init() {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException("Property 'jwt.secret' is not set.");
+        }
+
+        byte[] bytes = secret.getBytes(StandardCharsets.UTF_8);
+        if (bytes.length < MIN_SECRET_BYTES) {
+            throw new IllegalStateException(
+                    "Property 'jwt.secret' must be at least " + MIN_SECRET_BYTES
+                            + " bytes (got " + bytes.length + ").");
+        }
+
+        this.key = Keys.hmacShaKeyFor(bytes);
     }
 
     public TokenPair generateTokenPair(User user) {

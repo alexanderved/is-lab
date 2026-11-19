@@ -4,7 +4,9 @@ import common.exceptions.UserNameAlreadyTakenException;
 import common.exceptions.UserNotFoundException;
 import common.network.requests.LoginRequest;
 import common.network.requests.RegistrationRequest;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import server.exceptions.InvalidRefreshTokenException;
 import server.exceptions.RepositoryAccessFailedException;
 import server.exceptions.UserDBAccessFailedException;
@@ -21,21 +23,24 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Random;
 
-@Service
+@ApplicationScoped
 public class AuthService {
     private static final Random RANDOM = new SecureRandom();
 
-    private final AUserRepository AUserRepository;
-    private final Hasher hasher;
-    public final TokenService tokenService;
+    @Inject
+    private AUserRepository AUserRepository;
 
-    public AuthService(AUserRepository AUserRepository, Hasher hasher,
-                       TokenService tokenService) {
-        this.AUserRepository = AUserRepository;
-        this.hasher = hasher;
-        this.tokenService = tokenService;
+    @Inject
+    private Hasher hasher;
+
+    @Inject
+    private TokenService tokenService;
+
+    public AuthService() {
+
     }
 
+    @Transactional
     public void registerSuperadmin(RegistrationRequest req)
             throws UserNameAlreadyTakenException, UserDBAccessFailedException {
         String salt = generateSalt();
@@ -43,9 +48,6 @@ public class AuthService {
 
         UserTemplate template = new UserTemplate()
                 .setUsername(req.getUsername())
-                .setEmail(req.getEmail())
-                .setFirstName(req.getFirstName())
-                .setSecondName(req.getSecondName())
                 .setRole(Role.ROLE_USER)
                 .setPasswordHash(passwordHash)
                 .setSalt(salt);
@@ -57,6 +59,7 @@ public class AuthService {
         }
     }
 
+    @Transactional
     public void register(RegistrationRequest req)
             throws UserNameAlreadyTakenException, UserDBAccessFailedException {
         String salt = generateSalt();
@@ -64,9 +67,6 @@ public class AuthService {
 
         UserTemplate template = new UserTemplate()
                 .setUsername(req.getUsername())
-                .setEmail(req.getEmail())
-                .setFirstName(req.getFirstName())
-                .setSecondName(req.getSecondName())
                 .setRole(Role.ROLE_USER)
                 .setPasswordHash(passwordHash)
                 .setSalt(salt);
@@ -78,6 +78,7 @@ public class AuthService {
         }
     }
 
+    @Transactional
     public TokenPair login(LoginRequest req)
             throws UserNotFoundException, UserDBAccessFailedException {
         try {
@@ -98,6 +99,7 @@ public class AuthService {
         }
     }
 
+    @Transactional
     public TokenPair refresh(Token token)
             throws UserDBAccessFailedException, InvalidRefreshTokenException {
         try {

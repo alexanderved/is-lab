@@ -1,7 +1,6 @@
 package server.model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.Check;
 import server.service.user.Role;
 import server.service.user.UserTemplate;
 
@@ -18,18 +17,13 @@ public class User implements Serializable {
     @Column(name="id", nullable=false, unique=true)
     private int id;
 
-    @Column(name = "username", unique = true, nullable = false)
-    @Check(constraints = "LENGTH(username) > 0")
+    @Column(
+            name = "username",
+            unique = true,
+            nullable = false,
+            check = @CheckConstraint(constraint = "LENGTH(username) > 0")
+    )
     private String username;
-
-    @Column(name = "email", unique = true, nullable = false)
-    private String email;
-
-    @Column(name = "first_name")
-    private String firstName;
-
-    @Column(name = "second_name")
-    private String secondName;
 
     @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -43,7 +37,7 @@ public class User implements Serializable {
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,
             mappedBy = "user", orphanRemoval = true)
-    private final List<RefreshToken> refreshTokens = new ArrayList<>();
+    private List<RefreshToken> refreshTokens = new ArrayList<>();
 
     public User() {
 
@@ -51,9 +45,6 @@ public class User implements Serializable {
 
     public User(UserTemplate template) {
         username = Objects.requireNonNull(template.getUsername());
-        email = Objects.requireNonNull(template.getEmail());
-        firstName = template.getFirstName();
-        secondName = template.getSecondName();
         role = Objects.requireNonNull(template.getRole());
         passwordHash = Objects.requireNonNull(template.getPasswordHash());
         salt = Objects.requireNonNull(template.getSalt());
@@ -66,9 +57,6 @@ public class User implements Serializable {
 
     public void update(server.service.user.User user) {
         username = Objects.requireNonNull(user.getUsername());
-        email = Objects.requireNonNull(user.getEmail());
-        firstName = user.getFirstName();
-        secondName = user.getSecondName();
         role = Objects.requireNonNull(user.getRole());
         passwordHash = Objects.requireNonNull(user.getPasswordHash());
         salt = Objects.requireNonNull(user.getSalt());
@@ -108,9 +96,6 @@ public class User implements Serializable {
     public server.service.user.User toUser() {
         UserTemplate template = new UserTemplate()
                 .setUsername(username)
-                .setEmail(email)
-                .setFirstName(firstName)
-                .setSecondName(secondName)
                 .setRole(role)
                 .setPasswordHash(passwordHash)
                 .setSalt(salt);

@@ -11,55 +11,44 @@ import common.utils.validators.LocationValidator;
  * Класс координат локации в трехмерном пространстве.
  */
 public final class Location implements Validatable, Serializable {
-    private final long x;
-    private final Long y; // Поле не может быть null
-    private final Integer z; // Поле не может быть null
+    private final int x;
+    private final int y;
+    private final double z;
+    private final String name; // Поле не может быть null
 
     private Location() {
-        x = 0L;
-        y = 0L;
-        z = 0;
+        x = 0;
+        y = 0;
+        z = 0.0;
+        name = "";
     }
 
-    /**
-     * @param x Координата X
-     * @param y Координата Y
-     * @param z Координата Z
-     * @throws InvalidFieldFormatException если аргументы не удовлетворяют ожидаемому формату
-     */
-    public Location(long x, Long y, Integer z) throws InvalidFieldFormatException {
+    public Location(int x, int y, double z, String name)
+            throws InvalidFieldFormatException {
         this.x = x;
-
-        if (!LocationValidator.validateY(y)) {
-            throw new InvalidFieldFormatException("y", "Поле `y` не может null");
-        }
         this.y = y;
-
-        if (!LocationValidator.validateZ(z)) {
-            throw new InvalidFieldFormatException("z", "Поле `z` не может null");
-        }
         this.z = z;
+
+        if (!LocationValidator.validateName(name)) {
+            throw new InvalidFieldFormatException("name", "Поле `name` не может null");
+        }
+        this.name = name;
     }
 
-    /**
-     * @return координату X
-     */
-    public long getX() {
+    public int getX() {
         return x;
     }
 
-    /**
-     * @return координату Y
-     */
-    public Long getY() {
+    public int getY() {
         return y;
     }
 
-    /**
-     * @return координату Z
-     */
-    public Integer getZ() {
+    public double getZ() {
         return z;
+    }
+
+    public String getName() {
+        return name;
     }
 
     @Override
@@ -79,16 +68,16 @@ public final class Location implements Validatable, Serializable {
 
         Location l = (Location)o;
 
-        return x == l.x && y.equals(l.y) && z.equals(l.z);
+        return x == l.x && y == l.y && z == l.z && name.equals(l.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(x, y, z);
+        return Objects.hash(x, y, z, name);
     }
 
     @Override
     public String toString() {
-        return "(" + x + ", " + y + ", " + z + ")";
+        return name + ", " + "(" + x + ", " + y + ", " + z + ")";
     }
 }

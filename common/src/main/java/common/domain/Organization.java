@@ -1,7 +1,6 @@
 package common.domain;
 
 import java.io.Serializable;
-import java.time.ZonedDateTime;
 import java.util.Objects;
 
 import common.utils.Validatable;
@@ -11,56 +10,37 @@ import common.utils.validators.OrganizationValidator;
  * Класс организации
  */
 public final class Organization implements Validatable, Comparable<Organization>, Serializable {
-    private final int id; // Значение поля должно быть больше 0,
-                          // Значение этого поля должно быть уникальным,
-                          // Значение этого поля должно генерироваться автоматически
-    private String name; // Поле не может быть null, Строка не может быть пустой
-    private Coordinates coordinates; // Поле не может быть null
-    private final ZonedDateTime creationDate; // Поле не может быть null, Значение этого поля
-                                              // должно генерироваться автоматически
-    private Float annualTurnover; // Поле может быть null, Значение поля должно быть больше 0
-    private String fullName; // Поле может быть null
-    private int employeesCount; // Значение поля должно быть больше 0
-    private OrganizationType type; // Поле не может быть null
+    private final int id;
     private Address officialAddress; // Поле может быть null
+    private Long annualTurnover; // Поле не может быть null, Значение поля должно быть больше 0
+    private Long employeesCount; // Поле не может быть null, Значение поля должно быть больше 0
+    private String fullName; // Строка не может быть пустой, Поле может быть null
+    private Float rating; // Поле может быть null, Значение поля должно быть больше 0
+    private OrganizationType type; // Поле не может быть null
+    private Address postalAddress; // Поле может быть null
 
     private final int userId;
 
     /**
-     * Конструктор организации, в котором датой создания устанавливается данный момент времени.
      * @param id ID организации
+     * @param userId ID пользователя, добавившего организацию
      * @param template Шаблон организации
      */
     public Organization(int id, int userId, OrganizationTemplate template) {
-        this(id, ZonedDateTime.now(), userId, template);
-    }
-
-    /**
-     * @param id ID организации
-     * @param creationDate Дата создания организации
-     * @param template Шаблон организации
-     */
-    public Organization(int id, ZonedDateTime creationDate, int userId, OrganizationTemplate template) {
         if (id <= 0) {
             throw new IllegalArgumentException("Поле `id` класса `Organization`"
-                + " должно быть больше 0");
-        }
-
-        if (creationDate == null) {
-            throw new IllegalArgumentException("Поле `creationDate` класса `Organization`"
-                + " не должно быть null");
+                    + " должно быть больше 0");
         }
 
         this.id = id;
-        name = template.getName();
-        coordinates = template.getCoordinates();
-        this.creationDate = creationDate;
-        annualTurnover = template.getAnnualTurnover();
-        fullName = template.getFullName();
-        employeesCount = template.getEmployeesCount();
-        type = template.getType();
-        officialAddress = template.getOfficialAddress();
         this.userId = userId;
+        officialAddress = template.getOfficialAddress();
+        annualTurnover = template.getAnnualTurnover();
+        employeesCount = template.getEmployeesCount();
+        fullName = template.getFullName();
+        rating = template.getRating();
+        type = template.getType();
+        postalAddress = template.getPostalAddress();
     }
 
     /**
@@ -68,13 +48,13 @@ public final class Organization implements Validatable, Comparable<Organization>
      * @param template Шаблон новых данных организации.
      */
     public void update(OrganizationTemplate template) {
-        name = template.getName();
-        coordinates = template.getCoordinates();
-        annualTurnover = template.getAnnualTurnover();
-        fullName = template.getFullName();
-        employeesCount = template.getEmployeesCount();
-        type = template.getType();
         officialAddress = template.getOfficialAddress();
+        annualTurnover = template.getAnnualTurnover();
+        employeesCount = template.getEmployeesCount();
+        fullName = template.getFullName();
+        rating = template.getRating();
+        type = template.getType();
+        postalAddress = template.getPostalAddress();
     }
 
     /**
@@ -85,31 +65,24 @@ public final class Organization implements Validatable, Comparable<Organization>
     }
 
     /**
-     * @return название организации
+     * @return официальный адрес организации или null, если данная информация отсутствует
      */
-    public String getName() {
-        return name;
+    public Address getOfficialAddress() {
+        return officialAddress;
     }
 
     /**
-     * @return координаты организации
+     * @return годовой оборот организации
      */
-    public Coordinates getCoordinates() {
-        return coordinates;
-    }
-
-    /**
-     * @return дату создания организации
-     */
-    public ZonedDateTime getCreationDate() {
-        return creationDate;
-    }
-
-    /**
-     * @return годовой оборот организации или null, если данная информация отсутствует
-     */
-    public Float getAnnualTurnover() {
+    public Long getAnnualTurnover() {
         return annualTurnover;
+    }
+
+    /**
+     * @return число работников организации
+     */
+    public Long getEmployeesCount() {
+        return employeesCount;
     }
 
     /**
@@ -120,10 +93,10 @@ public final class Organization implements Validatable, Comparable<Organization>
     }
 
     /**
-     * @return число работников организации
+     * @return рейтинг организации или null, если данная информация отсутствует
      */
-    public int getEmployeesCount() {
-        return employeesCount;
+    public Float getRating() {
+        return rating;
     }
 
     /**
@@ -134,10 +107,10 @@ public final class Organization implements Validatable, Comparable<Organization>
     }
 
     /**
-     * @return официальный адрес организации или null, если данная информация отсутствует
+     * @return почтовый адрес организации или null, если данная информация отсутствует
      */
-    public Address getOfficialAddress() {
-        return officialAddress;
+    public Address getPostalAddress() {
+        return postalAddress;
     }
 
     /**
@@ -154,7 +127,7 @@ public final class Organization implements Validatable, Comparable<Organization>
 
     @Override
     public int compareTo(Organization org) {
-        return getEmployeesCount() - org.getEmployeesCount();
+        return Long.compare(getEmployeesCount(), org.getEmployeesCount());
     }
 
     @Override
@@ -175,41 +148,50 @@ public final class Organization implements Validatable, Comparable<Organization>
         if (fullName == null && org.fullName != null) {
             return false;
         }
+        if (rating == null && org.rating != null) {
+            return false;
+        }
         if (officialAddress == null && org.officialAddress != null) {
             return false;
         }
+        if (postalAddress == null && org.postalAddress != null) {
+            return false;
+        }
 
-        return id == org.id && name.equals(org.name)
-                && coordinates.equals(org.coordinates)
-                && creationDate.equals(org.creationDate)
+        return id == org.id
+                && userId == org.userId
                 && annualTurnover.equals(org.annualTurnover)
+                && employeesCount.equals(org.employeesCount)
                 && fullName.equals(org.fullName)
-                && employeesCount == org.employeesCount
+                && rating.equals(org.rating)
                 && type.equals(org.type)
-                && officialAddress.equals(org.officialAddress);
+                && officialAddress.equals(org.officialAddress)
+                && postalAddress.equals(org.postalAddress);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, coordinates, creationDate, annualTurnover,
-                fullName, employeesCount, type, officialAddress);
+        return Objects.hash(id, userId, annualTurnover, employeesCount,
+                fullName, rating, type, officialAddress, postalAddress);
     }
 
     @Override
     public String toString() {
-        String s = "Организация (ID: " + id + ", Дата добавления: " + creationDate + ")";
-        s += "\n\tНазвание: " + name;
-        s += "\n\tКоординаты: " + coordinates;
-        if (annualTurnover != null) {
-            s += "\n\tГодовой оборот: " + annualTurnover;
-        }
+        String s = "Организация (ID: " + id + ")";
+        s += "\n\tГодовой оборот: " + annualTurnover;
+        s += "\n\tЧисло сотрудников: " + employeesCount;
         if (fullName != null) {
             s += "\n\tПолное название: " + fullName;
         }
-        s += "\n\tЧисло сотрудников: " + employeesCount;
+        if (rating != null) {
+            s += "\n\tРейтинг: " + rating;
+        }
         s += "\n\tТип: " + type;
         if (officialAddress != null) {
             s += "\n\tОфициальный адрес: " + officialAddress;
+        }
+        if (postalAddress != null) {
+            s += "\n\tПочтовый адрес: " + postalAddress;
         }
 
         return s;
