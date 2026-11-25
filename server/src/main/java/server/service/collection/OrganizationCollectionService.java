@@ -1,29 +1,19 @@
 package server.service.collection;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import jakarta.annotation.PostConstruct;
 
-import common.domain.Organization;
-import common.domain.OrganizationTemplate;
+import server.repository.OrganizationRepository;
+import server.resource.domain.organization.Organization;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import server.repository.AOrganizationRepository;
+import server.resource.dto.OrganizationDTO;
 import server.service.token.Token;
-import server.exceptions.CollectionOperationFailedException;
-import server.exceptions.RepositoryAccessFailedException;
-import server.exceptions.RepositoryDataCorruptedException;
-import common.utils.validators.OrganizationCollectionValidator;
 
 @ApplicationScoped
 public class OrganizationCollectionService {
-    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-    private final List<Organization> collection = new ArrayList<>();
-
     @Inject
-    private AOrganizationRepository organizationRepository;
+    private OrganizationRepository organizationRepository;
 
     @Inject
     private WorkerCollectionService workerCollectionService;
@@ -32,39 +22,30 @@ public class OrganizationCollectionService {
 
     }
 
-    @PostConstruct
-    public void init() throws RepositoryAccessFailedException, RepositoryDataCorruptedException {
-        List<Organization> loaded = new ArrayList<>(organizationRepository.load());
-        if (!OrganizationCollectionValidator.validate(loaded)) {
-            throw new RepositoryDataCorruptedException();
-        }
-        collection.addAll(loaded);
-    }
-
+    @Transactional
     public List<Organization> getCollection(String order,
                                             String column,
                                             int pageNumber,
                                             int perPageNumber,
                                             int pageCount,
                                             String filter) {
-        lock.readLock().lock();
-        try {
-            long skip = Math.max(0L, (long) (pageNumber - 1) * perPageNumber);
-            long limit = (long) Math.max(0, pageCount) * perPageNumber;
+        List<Organization> collection = organizationRepository.load();
 
-            return collection.stream()
-                    .filter((org) -> matchesFilter(org, column, filter))
-                    .sorted((a, b) -> compareOrganizations(a, b, column, order))
-                    .skip(skip)
-                    .limit(limit)
-                    .toList();
-        } finally {
-            lock.readLock().unlock();
-        }
+        long skip = Math.max(0L, (long) (pageNumber - 1) * perPageNumber);
+        long limit = (long) Math.max(0, pageCount) * perPageNumber;
+
+        return collection.stream()
+                .filter((org) -> matchesFilter(org, column, filter))
+                .sorted((a, b) -> compareOrganizations(a, b, column, order))
+                .skip(skip)
+                .limit(limit)
+                .toList();
     }
 
+    @Transactional
     public int count(String column, String filter) {
-        return (int) collection.stream()
+        return (int) organizationRepository.load()
+                .stream()
                 .filter((org) -> matchesFilter(org, column, filter))
                 .count();
     }
@@ -125,65 +106,18 @@ public class OrganizationCollectionService {
         return a.compareTo(b);
     }
 
-    public int add(Token token, OrganizationTemplate template)
-            throws CollectionOperationFailedException {
-        lock.writeLock().lock();
-        try {
-            Organization org;
-            try {
-                org = organizationRepository.add(template, token);
-            } catch (RepositoryAccessFailedException e) {
-                throw new CollectionOperationFailedException(e);
-            }
-
-            collection.add(org);
-
-            return org.getId();
-        } finally {
-            lock.writeLock().unlock();
-        }
+    @Transactional
+    public int add(Token token, OrganizationDTO dto) {
+        return organizationRepository.add(dto, token).getId();
     }
 
-    public boolean removeById(Token token, int id) throws CollectionOperationFailedException {
-        lock.writeLock().lock();
-        try {
-            try {
-                if (organizationRepository.remove(id, token)) {
-                    collection.removeIf((org) -> org.getId() == id);
-                    workerCollectionService.sync();
-
-                    return true;
-                }
-
-                return false;
-            } catch (RepositoryAccessFailedException | RepositoryDataCorruptedException e) {
-                throw new CollectionOperationFailedException(e);
-            }
-        } finally {
-            lock.writeLock().unlock();
-        }
+    @Transactional
+    public boolean removeById(Token token, int id) {
+        return organizationRepository.remove(id, token);
     }
 
-    public boolean update(Token token, int id, OrganizationTemplate template)
-            throws CollectionOperationFailedException {
-        lock.writeLock().lock();
-        try {
-            try {
-                if (organizationRepository.update(id, template, token)) {
-                    collection.stream()
-                            .filter((org) -> org.getId() == id)
-                            .findFirst()
-                            .ifPresent((org) -> org.update(template));
-
-                    return true;
-                }
-
-                return false;
-            } catch (RepositoryAccessFailedException e) {
-                throw new CollectionOperationFailedException(e);
-            }
-        } finally {
-            lock.writeLock().unlock();
-        }
+    @Transactional
+    public boolean update(Token token, int id, OrganizationDTO dto) {
+        return organizationRepository.update(id, dto, token);
     }
 }

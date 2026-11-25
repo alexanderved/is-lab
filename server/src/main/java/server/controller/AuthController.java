@@ -1,13 +1,7 @@
 package server.controller;
 
-import common.exceptions.UserNameAlreadyTakenException;
-import common.exceptions.UserNotFoundException;
-import common.network.requests.LoginRequest;
-import common.network.requests.RegistrationRequest;
-import common.network.responses.ErrorResponse;
-import common.network.responses.LoginResponse;
-import common.network.responses.RefreshResponse;
-import common.network.responses.SuccessResponse;
+import server.exceptions.UserNameAlreadyTakenException;
+import server.exceptions.UserNotFoundException;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
@@ -17,6 +11,9 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import server.exceptions.InvalidRefreshTokenException;
 import server.exceptions.UserDBAccessFailedException;
+import server.resource.dto.ErrorInfo;
+import server.resource.dto.TokenStringPair;
+import server.resource.dto.UserCredentials;
 import server.service.auth.AuthService;
 import server.service.token.Token;
 import server.service.token.TokenPair;
@@ -40,43 +37,42 @@ public class AuthController {
 
     @POST
     @Path("/registration")
-    public Response registration(RegistrationRequest req)
+    public Response registration(UserCredentials req)
             throws UserDBAccessFailedException, UserNameAlreadyTakenException {
         authService.register(req);
-        return Response.ok(new SuccessResponse()).build();
+        return Response.ok().build();
     }
 
     @POST
     @Path("/login")
-    public Response login(LoginRequest req)
+    public Response login(UserCredentials req)
             throws UserDBAccessFailedException, UserNotFoundException {
         TokenPair pair = authService.login(req);
         String access = tokenService.generateTokenString(pair.getAccess());
         String refresh = tokenService.generateTokenString(pair.getRefresh());
 
-        return Response.ok(new LoginResponse(access, refresh)).build();
+        return Response.ok(new TokenStringPair(access, refresh)).build();
     }
 
     @POST
     @Path("/refresh")
-    public Response refresh(RefreshRequestDTO body)
+    public Response refresh(RefreshTokenString body)
             throws UserDBAccessFailedException, InvalidRefreshTokenException {
-        if (body == null || body.refreshToken == null || body.refreshToken.isBlank()) {
+        if (body == null || body.refreshToken() == null || body.refreshToken().isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorResponse("refreshToken is required"))
+                    .entity(new ErrorInfo("refreshToken is required"))
                     .build();
         }
 
-        Token refreshToken = tokenService.parseTokenString(body.refreshToken);
+        Token refreshToken = tokenService.parseTokenString(body.refreshToken());
         TokenPair pair = authService.refresh(refreshToken);
 
         String newAccess = tokenService.generateTokenString(pair.getAccess());
         String newRefresh = tokenService.generateTokenString(pair.getRefresh());
 
-        return Response.ok(new RefreshResponse(newAccess, newRefresh)).build();
+        return Response.ok(new TokenStringPair(newAccess, newRefresh)).build();
     }
 
-    public static final class RefreshRequestDTO implements Serializable {
-        public String refreshToken;
+    public record RefreshTokenString(String refreshToken) implements Serializable {
     }
 }

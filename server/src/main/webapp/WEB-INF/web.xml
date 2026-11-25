@@ -33,17 +33,18 @@
         </web-resource-collection>
 
         <web-resource-collection>
+            <web-resource-name>Import Service</web-resource-name>
+            <description/>
+            <url-pattern>/api/import/*</url-pattern>
+            <http-method-omission>OPTIONS</http-method-omission>
+        </web-resource-collection>
+
+        <web-resource-collection>
             <web-resource-name>Users Service</web-resource-name>
             <description/>
             <url-pattern>/api/users/*</url-pattern>
             <http-method-omission>OPTIONS</http-method-omission>
             <http-method-omission>GET</http-method-omission>
-        </web-resource-collection>
-
-        <web-resource-collection>
-            <web-resource-name>Update Service</web-resource-name>
-            <url-pattern>/api/update/*</url-pattern>
-            <http-method-omission>OPTIONS</http-method-omission>
         </web-resource-collection>
 
         <auth-constraint>

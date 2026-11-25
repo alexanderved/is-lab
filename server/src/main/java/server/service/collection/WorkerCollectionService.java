@@ -1,88 +1,61 @@
 package server.service.collection;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import common.domain.Worker;
-import common.domain.WorkerTemplate;
-import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import server.repository.WorkerRepository;
+import server.resource.domain.worker.Worker;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import server.repository.AWorkerRepository;
+import server.resource.dto.WorkerDTO;
 import server.service.token.Token;
-import server.exceptions.CollectionOperationFailedException;
-import server.exceptions.RepositoryAccessFailedException;
-import server.exceptions.RepositoryDataCorruptedException;
-import common.utils.validators.WorkerCollectionValidator;
+import server.utils.TransactionManager;
 
 @ApplicationScoped
 public class WorkerCollectionService {
-    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-    private List<Worker> collection = new ArrayList<>();
+    @Inject
+    private WorkerRepository workerRepository;
 
     @Inject
-    private AWorkerRepository workerRepository;
+    private TransactionManager transactionManager;
 
     public WorkerCollectionService() {
 
     }
 
-    @PostConstruct
-    public void init() throws RepositoryAccessFailedException, RepositoryDataCorruptedException {
-        sync();
-    }
-
-    public void sync() throws RepositoryAccessFailedException, RepositoryDataCorruptedException {
-        lock.readLock().lock();
-        try {
-            List<Worker> loaded = new ArrayList<>(workerRepository.load());
-            if (!WorkerCollectionValidator.validate(loaded)) {
-                throw new RepositoryDataCorruptedException();
-            }
-
-            collection = loaded;
-        } finally {
-            lock.readLock().unlock();
-        }
-    }
-
+    @Transactional
     public List<Worker> getCollection(String order,
                                       String column,
                                       int pageNumber,
                                       int perPageNumber,
                                       int pageCount,
                                       String filter) {
-        lock.readLock().lock();
-        try {
-            long skip = Math.max(0L, (long) (pageNumber - 1) * perPageNumber);
-            long limit = (long) Math.max(0, pageCount) * perPageNumber;
+        List<Worker> collection = workerRepository.load();
 
-            return collection.stream()
-                    .filter((worker) -> matchesFilter(worker, column, filter))
-                    .sorted((a, b) -> compareWorkers(a, b, column, order))
-                    .skip(skip)
-                    .limit(limit)
-                    .toList();
-        } finally {
-            lock.readLock().unlock();
-        }
+        long skip = Math.max(0L, (long) (pageNumber - 1) * perPageNumber);
+        long limit = (long) Math.max(0, pageCount) * perPageNumber;
+
+        return collection.stream()
+                .filter((worker) -> matchesFilter(worker, column, filter))
+                .sorted((a, b) -> compareWorkers(a, b, column, order))
+                .skip(skip)
+                .limit(limit)
+                .toList();
     }
 
+    @Transactional
     public int count(String column, String filter) {
-        return (int) collection.stream()
+        return (int) workerRepository.load()
+                .stream()
                 .filter((worker) -> matchesFilter(worker, column, filter))
                 .count();
     }
 
+    @Transactional
     public List<Worker> getAll() {
-        lock.readLock().lock();
-        try {
-            return new ArrayList<>(collection);
-        } finally {
-            lock.readLock().unlock();
-        }
+        return workerRepository.load();
     }
 
     private static boolean matchesFilter(Worker worker, String column, String filter) {
@@ -151,114 +124,38 @@ public class WorkerCollectionService {
         return a.compareTo(b);
     }
 
-    public int add(Token token, WorkerTemplate template)
-            throws CollectionOperationFailedException {
-        lock.writeLock().lock();
-        try {
-            Worker worker;
-            try {
-                worker = workerRepository.add(template, token);
-            } catch (RepositoryAccessFailedException e) {
-                throw new CollectionOperationFailedException(e);
-            }
-
-            collection.add(worker);
-
-            return worker.getId();
-        } finally {
-            lock.writeLock().unlock();
-        }
-    }
-
-    public boolean removeById(Token token, int id) throws CollectionOperationFailedException {
-        lock.writeLock().lock();
-        try {
-            try {
-                if (workerRepository.remove(id, token)) {
-                    collection.removeIf((worker) -> worker.getId() == id);
-
-                    return true;
-                }
-
-                return false;
-            } catch (RepositoryAccessFailedException e) {
-                throw new CollectionOperationFailedException(e);
-            }
-        } finally {
-            lock.writeLock().unlock();
-        }
-    }
-
-    public boolean update(Token token, int id, WorkerTemplate template)
-            throws CollectionOperationFailedException {
-        lock.writeLock().lock();
-        try {
-            try {
-                if (workerRepository.update(id, template, token)) {
-                    collection.stream()
-                            .filter((worker) -> worker.getId() == id)
-                            .findFirst()
-                            .ifPresent((worker) -> worker.update(template));
-
-                    return true;
-                }
-
-                return false;
-            } catch (RepositoryAccessFailedException e) {
-                throw new CollectionOperationFailedException(e);
-            }
-        } finally {
-            lock.writeLock().unlock();
-        }
-    }
-
-    public Worker findById(int id) {
-        lock.readLock().lock();
-        try {
-            return collection.stream()
-                    .filter(w -> w.getId() == id)
-                    .findFirst()
-                    .orElse(null);
-        } finally {
-            lock.readLock().unlock();
-        }
+    public int add(Token token, WorkerDTO dto) {
+        return transactionManager.run(() -> this.doAdd(token, dto));
     }
 
     @Transactional
-    public Worker hire(Token token, int workerId, int organizationId)
-            throws CollectionOperationFailedException {
-        lock.writeLock().lock();
-        try {
-            Worker updated = workerRepository.hire(workerId, organizationId, token);
-            if (updated == null) {
-                return null;
-            }
-
-            collection.removeIf(w -> w.getId() == workerId);
-            collection.add(updated);
-
-            return updated;
-        } finally {
-            lock.writeLock().unlock();
-        }
+    public int doAdd(Token token, WorkerDTO dto) {
+        transactionManager.makeSerializable();
+        return workerRepository.add(dto, token).getId();
     }
 
     @Transactional
-    public Worker indexSalary(Token token, int workerId, double coefficient)
-            throws CollectionOperationFailedException {
-        lock.writeLock().lock();
-        try {
-            Worker updated = workerRepository.indexSalary(workerId, coefficient, token);
-            if (updated == null) {
-                return null;
-            }
+    public boolean removeById(Token token, int id) {
+        return workerRepository.remove(id, token);
+    }
 
-            collection.removeIf(w -> w.getId() == workerId);
-            collection.add(updated);
+    public boolean update(Token token, int id, WorkerDTO dto) {
+        return transactionManager.run(() -> this.doUpdate(token, id, dto));
+    }
 
-            return updated;
-        } finally {
-            lock.writeLock().unlock();
-        }
+    @Transactional
+    public boolean doUpdate(Token token, int id, WorkerDTO dto) {
+        transactionManager.makeSerializable();
+        return workerRepository.update(id, dto, token);
+    }
+
+    @Transactional
+    public Worker hire(Token token, int workerId, int organizationId) {
+        return workerRepository.hire(workerId, organizationId, token);
+    }
+
+    @Transactional
+    public Worker indexSalary(Token token, int workerId, double coefficient) {
+        return workerRepository.indexSalary(workerId, coefficient, token);
     }
 }

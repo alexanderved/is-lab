@@ -10,8 +10,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import server.exceptions.MalformedTokenException;
-import server.service.user.Role;
-import server.service.user.User;
+import server.resource.domain.user.Role;
+import server.resource.domain.user.User;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;

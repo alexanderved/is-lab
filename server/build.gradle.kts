@@ -20,6 +20,4 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 
     compileOnly("org.eclipse.microprofile:microprofile:6.1")
-
-    implementation(project(":common"))
 }

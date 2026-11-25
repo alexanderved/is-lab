@@ -1,6 +1,6 @@
 package server.controller;
 
-import common.exceptions.UserNotFoundException;
+import server.exceptions.UserNotFoundException;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
@@ -12,8 +12,8 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import server.exceptions.RepositoryAccessFailedException;
-import server.service.user.UserInfo;
-import server.service.user.UserService;
+import server.resource.dto.UserInfo;
+import server.service.UserService;
 
 import java.util.List;
 

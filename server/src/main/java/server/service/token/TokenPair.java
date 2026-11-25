@@ -1,6 +1,6 @@
 package server.service.token;
 
-import server.service.user.Role;
+import server.resource.domain.user.Role;
 
 import java.util.Date;
 

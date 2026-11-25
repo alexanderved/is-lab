@@ -1,12 +1,13 @@
 package server.service.auth;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-@ApplicationScoped
+@Dependent
 public class SHA512Hasher extends Hasher {
     private final MessageDigest md;
 

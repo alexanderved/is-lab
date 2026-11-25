@@ -1,6 +1,6 @@
 package server.controller;
 
-import common.exceptions.UserNotFoundException;
+import server.exceptions.UserNotFoundException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.security.enterprise.AuthenticationException;
@@ -11,10 +11,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.core.HttpHeaders;
 import server.exceptions.RepositoryAccessFailedException;
-import server.service.user.User;
+import server.resource.domain.user.User;
 import server.service.token.Token;
 import server.service.token.TokenService;
-import server.service.user.UserService;
+import server.service.UserService;
 
 import java.util.Set;
 
@@ -56,7 +56,7 @@ public class JWTAuthMechanism implements HttpAuthenticationMechanism {
         User user = null;
         try {
             user = userService.findByName(token.getUsername());
-        } catch (UserNotFoundException | RepositoryAccessFailedException e) {
+        } catch (UserNotFoundException e) {
             return context.responseUnauthorized();
         }
 

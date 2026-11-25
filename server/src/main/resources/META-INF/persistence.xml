@@ -9,11 +9,12 @@
         <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
         <jta-data-source>java:jboss/datasources/PostgresDS</jta-data-source>
 
-        <class>server.model.User</class>
-        <class>server.model.RefreshToken</class>
-        <class>server.model.Organization</class>
-        <class>server.model.Worker</class>
-        <class>server.model.Person</class>
+        <class>server.resource.entities.UserEntity</class>
+        <class>server.resource.entities.RefreshTokenEntity</class>
+        <class>server.resource.entities.OrganizationEntity</class>
+        <class>server.resource.entities.WorkerEntity</class>
+        <class>server.resource.entities.PersonEntity</class>
+        <class>server.resource.entities.ImportOperationEntity</class>
 
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
 

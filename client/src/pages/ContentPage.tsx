@@ -110,7 +110,7 @@ const TAB_CONFIGS: TabConfig[] = [
             { key: 'id', label: 'Id', width: 60, align: 'center' },
             { key: 'eyeColor', label: 'Eye Color', width: 130 },
             { key: 'hairColor', label: 'Hair Color', width: 130 },
-            { key: 'location', label: 'Location', width: 220,
+            { key: 'location', label: 'Location', width: 250,
                 render: (r) => r.location
                     ? `${r.location.name} (${r.location.x}, ${r.location.y}, ${r.location.z})`
                     : '-' },
@@ -324,6 +324,7 @@ const ContentPage = () => {
                                 Remove
                             </Button>
                             <Input placeholder="Filter" onChange={handleFilterChange} />
+                            <Button href={`/import`}>Import</Button>
                         </HStack>
 
                         <Pagination

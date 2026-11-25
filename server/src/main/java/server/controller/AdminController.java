@@ -1,7 +1,6 @@
 package server.controller;
 
-import common.exceptions.UserNotFoundException;
-import common.network.responses.SuccessResponse;
+import server.exceptions.UserNotFoundException;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -12,8 +11,8 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import server.exceptions.RepositoryAccessFailedException;
-import server.service.admin.AdminService;
-import server.service.user.Role;
+import server.service.AdminService;
+import server.resource.domain.user.Role;
 
 @Path("/admin")
 @Produces(MediaType.APPLICATION_JSON)
@@ -38,7 +37,7 @@ public class AdminController {
                     default -> role;
                 });
 
-        return Response.ok(new SuccessResponse()).build();
+        return Response.ok().build();
     }
 
     @POST
@@ -52,6 +51,6 @@ public class AdminController {
                     default -> Role.ROLE_BLOCKED;
                 });
 
-        return Response.ok(new SuccessResponse()).build();
+        return Response.ok().build();
     }
 }

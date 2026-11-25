@@ -1,8 +1,5 @@
 package server.controller;
 
-import common.domain.OrganizationTemplate;
-import common.utils.validators.OrganizationTemplateValidator;
-
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -13,6 +10,8 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import server.exceptions.CollectionOperationFailedException;
 import server.exceptions.UnauthorizedRequestException;
+import server.resource.dto.AddInfo;
+import server.resource.dto.OrganizationDTO;
 import server.service.collection.OrganizationCollectionService;
 import server.service.token.Token;
 import server.service.token.TokenService;
@@ -55,18 +54,14 @@ public class OrganizationController {
     @POST
     public Response add(
             @Context HttpHeaders headers,
-            OrganizationTemplate template
+            OrganizationDTO dto
     ) throws CollectionOperationFailedException, UnauthorizedRequestException {
         Token token = getToken(headers);
 
-        if (!OrganizationTemplateValidator.validate(template)) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
-        }
-
-        int id = service.add(token, template);
+        int id = service.add(token, dto);
         UpdateWebSocket.notifyUpdate();
 
-        return Response.status(Response.Status.CREATED).entity(id).build();
+        return Response.status(Response.Status.CREATED).entity(new AddInfo(id)).build();
     }
 
     @PUT
@@ -74,15 +69,11 @@ public class OrganizationController {
     public Response update(
             @Context HttpHeaders headers,
             @PathParam("id") int id,
-            @RequestBody OrganizationTemplate template
+            @RequestBody OrganizationDTO dto
     ) throws CollectionOperationFailedException, UnauthorizedRequestException {
         Token token = getToken(headers);
 
-        if (!OrganizationTemplateValidator.validate(template)) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
-        }
-
-        boolean isUpdated = service.update(token, id, template);
+        boolean isUpdated = service.update(token, id, dto);
         if (isUpdated) {
             UpdateWebSocket.notifyUpdate();
             return Response.ok().build();

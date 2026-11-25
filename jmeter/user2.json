@@ -1,0 +1,40 @@
+[
+  {
+    "type": "worker",
+    "body": {
+      "name": "Import Test Worker 1 (User 2)",
+      "coordinates": { "x": 1, "y": 2 },
+      "salary": 50000,
+      "personId": 1,
+      "organization": {
+        "annualTurnover": 1000000,
+        "employeesCount": 50,
+        "fullName": "Import Test Organization (User 2)",
+        "type": "PRIVATE_LIMITED_COMPANY",
+        "officialAddress": { "street": "ул. БСПб, 1", "town": { "x": 10, "y": 20, "z": 30.5, "name": "Москва" } },
+        "postalAddress": null
+      }
+    }
+  },
+  {
+    "type": "worker",
+    "body": {
+      "name": "Import Test Worker 2 (User 2)",
+      "coordinates": { "x": 1, "y": 2 },
+      "salary": 50000,
+      "person": {
+        "eyeColor": "BLACK",
+        "hairColor": "BLACK",
+        "location": {
+          "x": 1,
+          "y": 2,
+          "z": 3.5,
+          "name": "Import Person Location (User 2)"
+        },
+        "weight": 80,
+        "nationality": "USA"
+      },
+      "organizationId": 1
+    }
+  }
+]

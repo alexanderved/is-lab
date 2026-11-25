@@ -1,8 +1,7 @@
 package server.controller;
 
-import common.domain.Person;
-import common.domain.Worker;
-import common.network.responses.ErrorResponse;
+import server.resource.domain.person.Person;
+import server.resource.domain.worker.Worker;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -12,7 +11,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import server.exceptions.CollectionOperationFailedException;
 import server.exceptions.UnauthorizedRequestException;
-import server.service.operations.SpecialOperationsService;
+import server.resource.dto.ErrorInfo;
+import server.service.SpecialOperationsService;
 import server.service.token.Token;
 import server.service.token.TokenService;
 
@@ -63,8 +63,8 @@ public class SpecialOperationsController {
         Worker updated = service.hire(token, workerId, organizationId);
         if (updated == null) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity(new ErrorResponse("Worker or organization not found, "
-                            + "or you don't have permission to modify this worker"))
+                    .entity(new ErrorInfo("Worker or organization not found, "
+                                          + "or you don't have permission to modify this worker"))
                     .build();
         }
         return Response.ok(updated).build();
@@ -78,15 +78,15 @@ public class SpecialOperationsController {
             throws CollectionOperationFailedException, UnauthorizedRequestException {
         if (coefficient <= 0) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorResponse("Coefficient must be positive"))
+                    .entity(new ErrorInfo("Coefficient must be positive"))
                     .build();
         }
         Token token = getToken(headers);
         Worker updated = service.indexSalary(token, workerId, coefficient);
         if (updated == null) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity(new ErrorResponse("Worker not found, "
-                            + "or you don't have permission to modify this worker"))
+                    .entity(new ErrorInfo("Worker not found, "
+                                          + "or you don't have permission to modify this worker"))
                     .build();
         }
         return Response.ok(updated).build();

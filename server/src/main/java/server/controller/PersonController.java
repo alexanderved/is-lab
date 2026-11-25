@@ -2,11 +2,10 @@ package server.controller;
 
 import java.util.Date;
 
-import common.domain.Color;
-import common.domain.Country;
-import common.domain.Location;
-import common.domain.PersonTemplate;
-import common.exceptions.InvalidFieldFormatException;
+import server.resource.domain.person.Color;
+import server.resource.domain.person.Country;
+import server.resource.domain.Location;
+import server.exceptions.InvalidFieldFormatException;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -17,6 +16,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import server.exceptions.CollectionOperationFailedException;
 import server.exceptions.UnauthorizedRequestException;
+import server.resource.dto.AddInfo;
+import server.resource.dto.PersonDTO;
 import server.service.collection.PersonCollectionService;
 import server.service.token.Token;
 import server.service.token.TokenService;
@@ -59,21 +60,14 @@ public class PersonController {
     @POST
     public Response add(
             @Context HttpHeaders headers,
-            PersonTemplateDTO body
+            PersonDTO dto
     ) throws CollectionOperationFailedException, UnauthorizedRequestException {
         Token token = getToken(headers);
 
-        PersonTemplate template;
-        try {
-            template = body.toTemplate();
-        } catch (InvalidFieldFormatException e) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
-        }
-
-        int id = service.add(token, template);
+        int id = service.add(token, dto);
         UpdateWebSocket.notifyUpdate();
 
-        return Response.status(Response.Status.CREATED).entity(id).build();
+        return Response.status(Response.Status.CREATED).entity(new AddInfo(id)).build();
     }
 
     @PUT
@@ -81,18 +75,11 @@ public class PersonController {
     public Response update(
             @Context HttpHeaders headers,
             @PathParam("id") int id,
-            PersonTemplateDTO body
+            PersonDTO dto
     ) throws CollectionOperationFailedException, UnauthorizedRequestException {
         Token token = getToken(headers);
 
-        PersonTemplate template;
-        try {
-            template = body.toTemplate();
-        } catch (InvalidFieldFormatException e) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
-        }
-
-        boolean isUpdated = service.update(token, id, template);
+        boolean isUpdated = service.update(token, id, dto);
         if (isUpdated) {
             UpdateWebSocket.notifyUpdate();
             return Response.ok().build();
@@ -114,37 +101,6 @@ public class PersonController {
         }
 
         return Response.status(Response.Status.NOT_FOUND).build();
-    }
-
-    public static final class PersonTemplateDTO {
-        public Color eyeColor;
-        public Color hairColor;
-        public LocationDTO location;
-        public Date birthday;
-        public Integer weight;
-        public Country nationality;
-
-        public PersonTemplate toTemplate() throws InvalidFieldFormatException {
-            return new PersonTemplate.Builder()
-                    .setEyeColor(eyeColor)
-                    .setHairColor(hairColor)
-                    .setLocation(location == null ? null : location.toDomain())
-                    .setBirthday(birthday)
-                    .setWeight(weight)
-                    .setNationality(nationality)
-                    .build();
-        }
-    }
-
-    public static final class LocationDTO {
-        public int x;
-        public int y;
-        public double z;
-        public String name;
-
-        public Location toDomain() throws InvalidFieldFormatException {
-            return new Location(x, y, z, name);
-        }
     }
 
     private Token getToken(HttpHeaders headers) throws UnauthorizedRequestException {

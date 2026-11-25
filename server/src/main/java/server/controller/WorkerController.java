@@ -1,13 +1,5 @@
 package server.controller;
 
-import common.domain.Coordinates;
-import common.domain.Person;
-import common.domain.Position;
-import common.domain.Status;
-import common.domain.WorkerTemplate;
-import common.exceptions.InvalidFieldFormatException;
-
-import common.network.responses.ErrorResponse;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -17,6 +9,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import server.exceptions.CollectionOperationFailedException;
 import server.exceptions.UnauthorizedRequestException;
+import server.resource.dto.AddInfo;
+import server.resource.dto.WorkerDTO;
 import server.service.collection.OrganizationCollectionService;
 import server.service.collection.PersonCollectionService;
 import server.service.collection.WorkerCollectionService;
@@ -67,26 +61,14 @@ public class WorkerController {
     @POST
     public Response add(
             @Context HttpHeaders headers,
-            WorkerTemplateDTO body
+            WorkerDTO dto
     ) throws CollectionOperationFailedException, UnauthorizedRequestException {
         Token token = getToken(headers);
 
-        WorkerTemplate template;
-        try {
-            template = body.toTemplate(organizationService, personService);
-        } catch (InvalidFieldFormatException | IllegalArgumentException e) {
-            System.out.println(e.toString());
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorResponse(e.getMessage() == null
-                            ? "Invalid worker data"
-                            : e.getMessage()))
-                    .build();
-        }
-
-        int id = workerService.add(token, template);
+        int id = workerService.add(token, dto);
         UpdateWebSocket.notifyUpdate();
 
-        return Response.status(Response.Status.CREATED).entity(id).build();
+        return Response.status(Response.Status.CREATED).entity(new AddInfo(id)).build();
     }
 
     @PUT
@@ -94,22 +76,11 @@ public class WorkerController {
     public Response update(
             @Context HttpHeaders headers,
             @PathParam("id") int id,
-            WorkerTemplateDTO body
+            WorkerDTO dto
     ) throws CollectionOperationFailedException, UnauthorizedRequestException {
         Token token = getToken(headers);
 
-        WorkerTemplate template;
-        try {
-            template = body.toTemplate(organizationService, personService);
-        } catch (InvalidFieldFormatException | IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorResponse(e.getMessage() == null
-                            ? "Invalid worker data"
-                            : e.getMessage()))
-                    .build();
-        }
-
-        boolean isUpdated = workerService.update(token, id, template);
+        boolean isUpdated = workerService.update(token, id, dto);
         if (isUpdated) {
             UpdateWebSocket.notifyUpdate();
             return Response.ok().build();
@@ -131,57 +102,6 @@ public class WorkerController {
         }
 
         return Response.status(Response.Status.NOT_FOUND).build();
-    }
-
-    public static final class WorkerTemplateDTO {
-        public String name;
-        public CoordinatesDTO coordinates;
-        public Integer organizationId;
-        public Integer salary;
-        public Long rating;
-        public Position position;
-        public Status status;
-        public Integer personId;
-
-        public WorkerTemplate toTemplate(OrganizationCollectionService organizationService,
-                                         PersonCollectionService personService)
-                throws InvalidFieldFormatException {
-            common.domain.Organization organization = organizationId == null
-                    ? null
-                    : organizationService.getCollection("ASC", "id", 1, Integer.MAX_VALUE, 1, "")
-                    .stream()
-                    .filter((o) -> o.getId() == organizationId)
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Организация с id " + organizationId + " не найдена"));
-
-            Person person = personService.getCollection("ASC", "id", 1, Integer.MAX_VALUE, 1, "")
-                    .stream()
-                    .filter((p) -> p.getId() == personId)
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Человек с id " + personId + " не найден"));
-
-            return new WorkerTemplate.Builder()
-                    .setName(name)
-                    .setCoordinates(coordinates.toDomain())
-                    .setOrganization(organization)
-                    .setSalary(salary)
-                    .setRating(rating)
-                    .setPosition(position)
-                    .setStatus(status)
-                    .setPerson(person)
-                    .build();
-        }
-    }
-
-    public static final class CoordinatesDTO {
-        public int x;
-        public float y;
-
-        public Coordinates toDomain() {
-            return new Coordinates(x, y);
-        }
     }
 
     private Token getToken(HttpHeaders headers) throws UnauthorizedRequestException {

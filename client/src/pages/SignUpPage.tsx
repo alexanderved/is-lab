@@ -45,7 +45,7 @@ const SignUpPage = () => {
             <Header>
                 <NavHeader />
             </Header>
-            <Content style={{ padding: '6em' }}>
+            <Content style={{ padding: '15em' }}>
                 <Stack alignItems="center" justifyContent="center" style={{ height: '100%' }}>
                     <Panel header="Sign up" bordered style={{ width: 400 }}>
                         <Form fluid onChange={onFormChange}>

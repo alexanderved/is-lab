@@ -11,6 +11,7 @@ import UserInfoPage from './pages/UserInfoPage.tsx';
 import AddPage from './pages/AddPage.tsx';
 import UpdatePage from './pages/UpdatePage.tsx';
 import OperationsPage from "./pages/OperationsPage.tsx";
+import ImportPage from "./pages/ImportPage.tsx";
 
 const App = () => {
     const [authChecked, setAuthChecked] = useState(false);
@@ -35,6 +36,7 @@ const App = () => {
                     <Route path='/add/:type' Component={AddPage}></Route>
                     <Route path='/update/:type/:id' Component={UpdatePage}></Route>
                     <Route path="/operations" Component={OperationsPage}></Route>
+                    <Route path="/import" Component={ImportPage}></Route>
                 </Routes>
             </AuthContext.Provider>
         </>
